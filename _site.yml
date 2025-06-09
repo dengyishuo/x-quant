@@ -1,7 +1,0 @@
-# _site.yml
-name: "x-quant"
-output_dir: "public"
-site: blogdown::hugo_site
-params:
-  title: "x-quant"
-  author: "MatrixSpk"
