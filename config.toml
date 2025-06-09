@@ -5,7 +5,6 @@ theme = "mainroad"
 disqusShortname = "" # Enable comments by entering your Disqus shortname
 googleAnalytics = "" # Enable Google Analytics by entering your tracking id
 
-# 修复分页配置（替换已弃用的paginate）
 [pagination]
   pagerSize = 10 # Number of posts per page
 
@@ -18,10 +17,10 @@ googleAnalytics = "" # Enable Google Analytics by entering your tracking id
   pager = true
   post_meta = ["date", "categories"] # Order of post meta information
   mainSections = ["post", "docs"]
-  ignoreLogs = ["warning-goldmark-raw-html"] # 忽略原始HTML渲染警告
+  ignoreLogs = ["warning-goldmark-raw-html"] 
 
 [params.logo]
-  subtitle = "Just another site" # Logo subtitle
+  subtitle = "专业的又不沉默的量化投资知识网站" # Logo subtitle
 
 [params.sidebar]
   home = "right"   # Configure layout for home page
