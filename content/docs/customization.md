@@ -12,8 +12,6 @@ thumbnail:
 authorbox: false
 sidebar: false
 pager: false
-weight: 2
-menu: main
 ---
 
 Customization page describes common Mainroad configuration parameters which can be specified via configuration file or

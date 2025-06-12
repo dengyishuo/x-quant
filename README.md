@@ -1,2 +1,2 @@
 # x-quant
-Teach you how to use quantitative models for investment
+Explore how to use quantitative models for investment.

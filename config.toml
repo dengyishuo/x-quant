@@ -9,7 +9,7 @@ googleAnalytics = "" # Enable Google Analytics by entering your tracking id
   pagerSize = 10 # Number of posts per page
 
 [params]
-  description = "x-quant's Personal blog about everything" # Description of your site
+  description = "Explore how to use quantitative models for investment." # Description of your site
   opengraph = true
   twitter_cards = false
   readmore = false # Show "Read more" button in list if true
@@ -20,7 +20,7 @@ googleAnalytics = "" # Enable Google Analytics by entering your tracking id
   ignoreLogs = ["warning-goldmark-raw-html"] 
 
 [params.logo]
-  subtitle = "专业的又不沉默的量化投资知识网站" # Logo subtitle
+  subtitle = "探索量化投资之道" # Logo subtitle
 
 [params.sidebar]
   home = "right"   # Configure layout for home page
@@ -33,8 +33,8 @@ googleAnalytics = "" # Enable Google Analytics by entering your tracking id
   recent_num = 5 # Set the number of articles in the "Recent articles" widget
   tags_counter = false # Enable counter for each tag in "Tags" widget (disabled by default)
 
-# 修复作者配置（替换已弃用的.Site.Author）
+# author
 [params.author]
-  name = "r-quant"
-  bio = "r-quant's true identity is unknown. Maybe he is a successful blogger or writer. Nobody knows it."
+  name = "MatrixSpk"
+  bio = "MatrixSpk is truely surprised by the power of quantitative models in investment. He is dedicated to exploring how to use these models effectively."
   avatar = "img/avatar.png"

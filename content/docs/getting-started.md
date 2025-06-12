@@ -9,8 +9,6 @@ tags:
 authorbox: false
 sidebar: false
 pager: false
-weight: 1
-menu: main
 ---
 
 Welcome to the Mainroad theme documentation. This quick start guide covers Mainroad theme installation and minimal
