@@ -1,5 +1,5 @@
 ---
-title: "MACD指标择时交易策略分析"
+title: "R软件与多股票波动性及相关性的可视化"
 author: "Ski/格物堂"
 date: "2025-06-10 15:36:25"
 description: null
