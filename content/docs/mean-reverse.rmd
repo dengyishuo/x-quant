@@ -11,11 +11,8 @@ tags: ["R", "金融", "协整", "配对交易"]
 categories: ["R语言", "金融数据分析"]
 documentclass: ctexart
 output:
-  rticles::ctex:
-    fig_caption: true
-    number_sections: true
-    toc: true
-    toc_depth: 2
+  html_document:
+    preserve_yaml: true
 ---
 
 \newpage

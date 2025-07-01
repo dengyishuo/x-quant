@@ -1,6 +1,6 @@
 ---
 title: "MACD指标择时交易策略分析"
-author: "Ski/格物堂"
+author: "Ski"
 date: "2025-06-10 15:36:25"
 description: null
 lead: null
@@ -16,11 +16,8 @@ categories:
   - "量化投资"
 documentclass: ctexart
 output:
-  rticles::ctex:
-    fig_caption: true
-    number_sections: true
-    toc: true
-    toc_depth: 2
+  html_document:
+    preserve_yaml: true
 ---
 
 \newpage
@@ -31,8 +28,6 @@ knitr::opts_chunk$set(echo = TRUE,
                       message = FALSE, 
                       fig.pos = 'H', 
                       fig.align = 'center', 
-                      fig.width = 6.5, 
-                      fig.height = 4, 
                       out.width = "90%", 
                       width = 80)
 ```
@@ -102,7 +97,7 @@ MACD指标由三条曲线组成：DIF线、DEA线和MACD柱状图。其计算基
    $$
    EMA_{l} = \frac{2}{N_{l} + 1} \times (Cl - EMA_{l}^{pre}) + EMA_{l}^{pre}
    $$
-   其中，$N_{s}$通常为12，$N_{l}$通常为26。
+   其中，$N_{s}$ 通常为12，$N_{l}$ 通常为26。
 
 2. 计算DIF线：
    $$

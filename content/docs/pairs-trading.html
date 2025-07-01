@@ -1,0 +1,1488 @@
+---
+title: "协整理论与配对交易策略分析"
+author: "MatrixSpk"
+date: "2025-06-12 15:26:31"
+lead: null
+description: null
+authorbox: false
+sidebar: false
+pager: false
+tags: ["R", "金融", "协整", "配对交易"]
+categories: ["R语言", "金融数据分析"]
+documentclass: ctexart
+output:
+  html_document:
+    preserve_yaml: true
+---
+
+
+
+<div style="page-break-after: always;"></div>
+<div id="摘要" class="section level1">
+<h1>摘要</h1>
+<p>本文通过实证分析展示了协整理论在配对交易策略中的应用。利用Quantmod包获取金融时间
+序列数据，结合tseries和urca等统计分析工具，我们识别了具有协整关系的股票对，并构建
+了基于误差修正模型的配对交易策略。回测结果表明，该策略在样本内和样本外均表现出稳
+定的超额收益，验证了协整理论在配对交易中的有效性。研究还分析了策略参数对表现的影
+响，为实际应用提供了参考。</p>
+</div>
+<div id="引言" class="section level1">
+<h1>引言</h1>
+<div id="协整理论概述" class="section level2">
+<h2>协整理论概述</h2>
+<p>协整理论是现代计量经济学的重要发展，由Engle和Granger(1987)提出，为非平稳时间序列
+分析提供了新的方法。如果两个或多个非平稳时间序列的线性组合是平稳的，则称这些序列
+存在协整关系。协整关系反映了变量之间的长期均衡关系，即使短期内可能偏离这种均衡，
+但长期来看会趋向于回归均衡状态。</p>
+<p>在金融市场中，许多资产价格序列表现出非平稳性（通常为I(1)过程），但某些资产对之间
+可能存在协整关系。这种协整关系为配对交易策略提供了理论基础。</p>
+</div>
+<div id="配对交易策略" class="section level2">
+<h2>配对交易策略</h2>
+<p>配对交易是一种市场中性策略，通过同时买入一只被低估的股票和卖出一只被高估的股票，
+从两者价格回归均衡的过程中获利。传统的配对交易策略通常基于统计套利思想，寻找价格
+走势相似的股票对。而基于协整理论的配对交易则更进一步，不仅要求价格走势相似，还要
+求存在长期稳定的均衡关系。</p>
+<p>配对交易策略的优势在于：
+- 市场中性：不受整体市场涨跌影响
+- 风险分散：同时持有多头和空头头寸
+- 统计基础：基于严格的统计理论
+- 可量化：策略参数和交易信号明确</p>
+<p>本文将通过实证分析，展示如何应用协整理论构建和评估配对交易策略。</p>
+</div>
+</div>
+<div id="理论基础" class="section level1">
+<h1>理论基础</h1>
+<div id="单位根检验" class="section level2">
+<h2>单位根检验</h2>
+<p>在进行协整分析之前，需要先检验时间序列是否存在单位根，即是否为非平稳序列。常用的
+单位根检验方法包括：</p>
+<div id="adf检验增广迪基-富勒检验" class="section level3">
+<h3>ADF检验（增广迪基-富勒检验）</h3>
+<p>ADF检验的原假设为序列存在单位根（非平稳），备择假设为序列不存在单位根（平稳）。检
+验统计量为：</p>
+<p><span class="math display">\[\Delta y_{t} = \alpha + \beta t + \gamma y_{t-1} + \sum_{i=1}^{p} \delta_{i} \Delta y_{t-i} + \varepsilon_{t}\]</span></p>
+<p>其中，<span class="math inline">\(\gamma=0\)</span> 表示存在单位根。</p>
+</div>
+<div id="kpss检验kwiatkowski-phillips-schmidt-shin检验" class="section level3">
+<h3>KPSS检验（Kwiatkowski-Phillips-Schmidt-Shin检验）</h3>
+<p>KPSS检验与ADF检验相反，其原假设为序列是平稳的，备择假设为序列存在单位根。</p>
+</div>
+</div>
+<div id="协整检验" class="section level2">
+<h2>协整检验</h2>
+<p>在确认两个序列均为非平稳序列后，需要检验它们是否存在协整关系。常用的协整检验方法
+包括：</p>
+<div id="engle-granger两步法" class="section level3">
+<h3>Engle-Granger两步法</h3>
+<p>Engle-Granger两步法的步骤如下：
+1. 对两个非平稳序列进行线性回归：<span class="math inline">\(y_{t} = \alpha + \beta x_{t} + \varepsilon_{t}\)</span>
+2. 检验回归残差序列 <span class="math inline">\(\hat{\varepsilon}_{t}\)</span> 是否平稳
+3. 如果残差序列平稳，则两个序列存在协整关系</p>
+</div>
+<div id="johansen检验" class="section level3">
+<h3>Johansen检验</h3>
+<p>Johansen检验是一种多变量协整检验方法，适用于检验多个时间序列之间的协整关系。它基
+于向量自回归模型(VAR)，通过最大似然估计法估计协整向量。</p>
+</div>
+</div>
+<div id="误差修正模型ecm" class="section level2">
+<h2>误差修正模型(ECM)</h2>
+<p>如果两个序列存在协整关系，则可以建立误差修正模型来描述它们的短期动态关系。误差修
+正模型的一般形式为：</p>
+<p><span class="math inline">\(\Delta y_{t} = \alpha_{1} + \sum_{i=1}^{p} \beta_{1i} \Delta y_{t-i} + \sum_{i=0}^{q} \gamma_{1i} \Delta x_{t-i} + \lambda_{1} (y_{t-1} - \beta x_{t-1}) + \varepsilon_{1t}\)</span></p>
+<p><span class="math inline">\(\Delta x_{t} = \alpha_{2} + \sum_{i=1}^{p} \beta_{2i} \Delta x_{t-i} + \sum_{i=0}^{q} \gamma_{2i} \Delta y_{t-i} + \lambda_2 (y_{t-1} - \beta x_{t-1}) + \varepsilon_{2t}\)</span></p>
+<p>其中，<span class="math inline">\((y_{t-1} - \beta x_{t-1})\)</span> 是误差修正项，表示对长期均衡关系的偏离。</p>
+</div>
+</div>
+<div id="实证分析" class="section level1">
+<h1>实证分析</h1>
+<div id="数据获取与预处理" class="section level2">
+<h2>数据获取与预处理</h2>
+<p>首先加载所需的R包并获取股票数据：</p>
+<pre class="r"><code># 加载必要的R包
+library(quantmod)      # 获取金融数据
+library(tseries)       # 时间序列分析
+library(urca)          # 单位根和协整检验
+library(ggplot2)       # 数据可视化
+library(dplyr)         # 数据处理
+library(PerformanceAnalytics)  # 绩效分析
+library(knitr)         # 表格输出</code></pre>
+<p>设置时间范围并获取股票数据：</p>
+<pre class="r"><code># 设置时间范围
+start_date &lt;- &quot;2018-01-01&quot;
+end_date &lt;- &quot;2023-01-01&quot;
+
+# 定义股票代码 - 以美国大型科技股为例
+tickers &lt;- c(&quot;AAPL&quot;, &quot;MSFT&quot;, &quot;AMZN&quot;, &quot;GOOGL&quot;, &quot;META&quot;, &quot;NFLX&quot;, &quot;TSLA&quot;, &quot;NVDA&quot;)
+
+# 创建一个空列表存储股票数据
+stock_data &lt;- list()
+
+# 获取每只股票的价格数据
+for(ticker in tickers) {
+  stock_data[[ticker]] &lt;- getSymbols(ticker, from = start_date, to = end_date, auto.assign = FALSE)
+}
+
+# 提取收盘价并合并为一个数据框
+close_prices &lt;- do.call(merge, lapply(stock_data, Cl))
+colnames(close_prices) &lt;- tickers
+
+# 查看数据基本信息
+str(close_prices)</code></pre>
+<pre><code>## An xts object on 2018-01-02 / 2022-12-30 containing: 
+##   Data:    double [1259, 8]
+##   Columns: AAPL, MSFT, AMZN, GOOGL, META ... with 3 more columns
+##   Index:   Date [1259] (TZ: &quot;UTC&quot;)
+##   xts Attributes:
+##     $ src    : chr &quot;yahoo&quot;
+##     $ updated: POSIXct[1:1], format: &quot;2025-07-01 16:03:25&quot;</code></pre>
+<pre class="r"><code>summary(close_prices)</code></pre>
+<pre><code>##      Index                 AAPL             MSFT             AMZN       
+##  Min.   :2018-01-02   Min.   : 35.55   Min.   : 85.01   Min.   : 59.45  
+##  1st Qu.:2019-04-03   1st Qu.: 51.02   1st Qu.:119.60   1st Qu.: 88.93  
+##  Median :2020-07-02   Median : 91.63   Median :201.91   Median :107.78  
+##  Mean   :2020-07-02   Mean   : 98.09   Mean   :193.87   Mean   :119.81  
+##  3rd Qu.:2021-09-30   3rd Qu.:142.86   3rd Qu.:255.25   3rd Qu.:158.09  
+##  Max.   :2022-12-30   Max.   :182.01   Max.   :343.11   Max.   :186.57  
+##      GOOGL             META             NFLX            TSLA       
+##  Min.   : 49.23   Min.   : 88.91   Min.   :166.4   Min.   : 11.93  
+##  1st Qu.: 58.74   1st Qu.:170.53   1st Qu.:298.6   1st Qu.: 21.08  
+##  Median : 73.96   Median :194.47   Median :361.8   Median : 80.58  
+##  Mean   : 85.71   Mean   :217.89   Mean   :387.8   Mean   :131.78  
+##  3rd Qu.:112.67   3rd Qu.:266.87   3rd Qu.:494.5   3rd Qu.:236.12  
+##  Max.   :149.84   Max.   :382.18   Max.   :691.7   Max.   :409.97  
+##       NVDA       
+##  Min.   : 3.177  
+##  1st Qu.: 5.606  
+##  Median : 9.612  
+##  Mean   :11.629  
+##  3rd Qu.:16.146  
+##  Max.   :33.376</code></pre>
+<p>绘制价格走势图：</p>
+<pre class="r"><code># 绘制价格走势图
+price_df &lt;- data.frame(
+  date = index(close_prices),
+  close_prices
+)
+
+price_long &lt;- reshape2::melt(price_df, id.vars = &quot;date&quot;)
+
+ggplot(price_long, aes(x = date, y = value, color = variable)) +
+  geom_line() +
+  labs(title = &quot;股票价格走势&quot;,
+       x = &quot;日期&quot;,
+       y = &quot;价格&quot;,
+       color = &quot;股票&quot;) +
+  theme_minimal()</code></pre>
+<p><img src="/docs/pairs-trading_files/figure-html/plot_prices-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="单位根检验-1" class="section level2">
+<h2>单位根检验</h2>
+<p>对每只股票的价格序列进行单位根检验，确认其非平稳性：</p>
+<pre class="r"><code># 创建一个函数进行ADF检验
+perform_adf_test &lt;- function(series) {
+  adf_result &lt;- adf.test(series)
+  return(data.frame(
+    Statistic = adf_result$statistic,
+    P_Value = adf_result$p.value,
+    Stationary = ifelse(adf_result$p.value &lt; 0.05, &quot;是&quot;, &quot;否&quot;)
+  ))
+}
+
+# 对每只股票进行ADF检验
+adf_results &lt;- lapply(close_prices, perform_adf_test)
+adf_results_df &lt;- do.call(rbind, adf_results)
+rownames(adf_results_df) &lt;- tickers
+
+# 展示ADF检验结果
+knitr::kable(adf_results_df, 
+             caption = &quot;股票价格序列的ADF单位根检验结果&quot;, 
+             digits = 4,
+             booktabs = TRUE)</code></pre>
+<table>
+<caption>(#tab:adf_test)股票价格序列的ADF单位根检验结果</caption>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">Statistic</th>
+<th align="right">P_Value</th>
+<th align="left">Stationary</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">AAPL</td>
+<td align="right">-1.5667</td>
+<td align="right">0.7617</td>
+<td align="left">否</td>
+</tr>
+<tr class="even">
+<td align="left">MSFT</td>
+<td align="right">-1.1554</td>
+<td align="right">0.9137</td>
+<td align="left">否</td>
+</tr>
+<tr class="odd">
+<td align="left">AMZN</td>
+<td align="right">-0.4665</td>
+<td align="right">0.9833</td>
+<td align="left">否</td>
+</tr>
+<tr class="even">
+<td align="left">GOOGL</td>
+<td align="right">-0.6337</td>
+<td align="right">0.9757</td>
+<td align="left">否</td>
+</tr>
+<tr class="odd">
+<td align="left">META</td>
+<td align="right">-0.4532</td>
+<td align="right">0.9839</td>
+<td align="left">否</td>
+</tr>
+<tr class="even">
+<td align="left">NFLX</td>
+<td align="right">-1.5389</td>
+<td align="right">0.7735</td>
+<td align="left">否</td>
+</tr>
+<tr class="odd">
+<td align="left">TSLA</td>
+<td align="right">-1.2537</td>
+<td align="right">0.8942</td>
+<td align="left">否</td>
+</tr>
+<tr class="even">
+<td align="left">NVDA</td>
+<td align="right">-1.7233</td>
+<td align="right">0.6954</td>
+<td align="left">否</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code># 对价格取对数并差分，创建收益率序列
+returns &lt;- diff(log(close_prices))[-1]
+
+# 对收益率序列进行ADF检验
+returns_adf_results &lt;- lapply(returns, perform_adf_test)
+returns_adf_results_df &lt;- do.call(rbind, returns_adf_results)
+rownames(returns_adf_results_df) &lt;- tickers
+
+# 展示收益率序列的ADF检验结果
+knitr::kable(returns_adf_results_df, 
+             caption = &quot;股票收益率序列的ADF单位根检验结果&quot;, 
+             digits = 4,
+             booktabs = TRUE)</code></pre>
+<table>
+<caption>(#tab:adf_test)股票收益率序列的ADF单位根检验结果</caption>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">Statistic</th>
+<th align="right">P_Value</th>
+<th align="left">Stationary</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">AAPL</td>
+<td align="right">-10.2580</td>
+<td align="right">0.01</td>
+<td align="left">是</td>
+</tr>
+<tr class="even">
+<td align="left">MSFT</td>
+<td align="right">-11.6003</td>
+<td align="right">0.01</td>
+<td align="left">是</td>
+</tr>
+<tr class="odd">
+<td align="left">AMZN</td>
+<td align="right">-11.4524</td>
+<td align="right">0.01</td>
+<td align="left">是</td>
+</tr>
+<tr class="even">
+<td align="left">GOOGL</td>
+<td align="right">-11.2531</td>
+<td align="right">0.01</td>
+<td align="left">是</td>
+</tr>
+<tr class="odd">
+<td align="left">META</td>
+<td align="right">-11.6074</td>
+<td align="right">0.01</td>
+<td align="left">是</td>
+</tr>
+<tr class="even">
+<td align="left">NFLX</td>
+<td align="right">-10.9801</td>
+<td align="right">0.01</td>
+<td align="left">是</td>
+</tr>
+<tr class="odd">
+<td align="left">TSLA</td>
+<td align="right">-9.9687</td>
+<td align="right">0.01</td>
+<td align="left">是</td>
+</tr>
+<tr class="even">
+<td align="left">NVDA</td>
+<td align="right">-10.4041</td>
+<td align="right">0.01</td>
+<td align="left">是</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="寻找潜在的协整对" class="section level2">
+<h2>寻找潜在的协整对</h2>
+<p>计算股票之间的相关性，并寻找可能存在协整关系的股票对：</p>
+<pre class="r"><code># 计算价格序列的相关性矩阵
+correlation_matrix &lt;- cor(close_prices, use = &quot;complete.obs&quot;)
+
+# 展示相关性矩阵
+knitr::kable(correlation_matrix, 
+             caption = &quot;股票价格序列相关性矩阵&quot;, 
+             digits = 4,
+             booktabs = TRUE)</code></pre>
+<table>
+<caption>(#tab:correlation_analysis)股票价格序列相关性矩阵</caption>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">AAPL</th>
+<th align="right">MSFT</th>
+<th align="right">AMZN</th>
+<th align="right">GOOGL</th>
+<th align="right">META</th>
+<th align="right">NFLX</th>
+<th align="right">TSLA</th>
+<th align="right">NVDA</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">AAPL</td>
+<td align="right">1.0000</td>
+<td align="right">0.9722</td>
+<td align="right">0.8029</td>
+<td align="right">0.9316</td>
+<td align="right">0.5147</td>
+<td align="right">0.3635</td>
+<td align="right">0.9618</td>
+<td align="right">0.9228</td>
+</tr>
+<tr class="even">
+<td align="left">MSFT</td>
+<td align="right">0.9722</td>
+<td align="right">1.0000</td>
+<td align="right">0.8451</td>
+<td align="right">0.9611</td>
+<td align="right">0.6168</td>
+<td align="right">0.4685</td>
+<td align="right">0.9439</td>
+<td align="right">0.9411</td>
+</tr>
+<tr class="odd">
+<td align="left">AMZN</td>
+<td align="right">0.8029</td>
+<td align="right">0.8451</td>
+<td align="right">1.0000</td>
+<td align="right">0.8044</td>
+<td align="right">0.8391</td>
+<td align="right">0.7683</td>
+<td align="right">0.7974</td>
+<td align="right">0.7960</td>
+</tr>
+<tr class="even">
+<td align="left">GOOGL</td>
+<td align="right">0.9316</td>
+<td align="right">0.9611</td>
+<td align="right">0.8044</td>
+<td align="right">1.0000</td>
+<td align="right">0.6528</td>
+<td align="right">0.4616</td>
+<td align="right">0.9418</td>
+<td align="right">0.9594</td>
+</tr>
+<tr class="odd">
+<td align="left">META</td>
+<td align="right">0.5147</td>
+<td align="right">0.6168</td>
+<td align="right">0.8391</td>
+<td align="right">0.6528</td>
+<td align="right">1.0000</td>
+<td align="right">0.8551</td>
+<td align="right">0.5404</td>
+<td align="right">0.6216</td>
+</tr>
+<tr class="even">
+<td align="left">NFLX</td>
+<td align="right">0.3635</td>
+<td align="right">0.4685</td>
+<td align="right">0.7683</td>
+<td align="right">0.4616</td>
+<td align="right">0.8551</td>
+<td align="right">1.0000</td>
+<td align="right">0.4042</td>
+<td align="right">0.4922</td>
+</tr>
+<tr class="odd">
+<td align="left">TSLA</td>
+<td align="right">0.9618</td>
+<td align="right">0.9439</td>
+<td align="right">0.7974</td>
+<td align="right">0.9418</td>
+<td align="right">0.5404</td>
+<td align="right">0.4042</td>
+<td align="right">1.0000</td>
+<td align="right">0.9357</td>
+</tr>
+<tr class="even">
+<td align="left">NVDA</td>
+<td align="right">0.9228</td>
+<td align="right">0.9411</td>
+<td align="right">0.7960</td>
+<td align="right">0.9594</td>
+<td align="right">0.6216</td>
+<td align="right">0.4922</td>
+<td align="right">0.9357</td>
+<td align="right">1.0000</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code># 绘制相关性热图
+library(corrplot)
+corrplot(correlation_matrix, method = &quot;color&quot;, type = &quot;upper&quot;, 
+         tl.col = &quot;black&quot;, tl.srt = 45,
+         title = &quot;股票价格相关性热图&quot;, mar = c(0, 0, 2, 0))</code></pre>
+<p><img src="/docs/pairs-trading_files/figure-html/correlation_analysis-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code># 寻找相关性较高的股票对
+high_corr_pairs &lt;- which(correlation_matrix &gt; 0.8 &amp; correlation_matrix &lt; 1, arr.ind = TRUE)
+high_corr_pairs &lt;- high_corr_pairs[high_corr_pairs[,1] &lt; high_corr_pairs[,2], ]
+
+# 展示高相关性股票对
+high_corr_pairs_df &lt;- data.frame(
+  Stock1 = rownames(correlation_matrix)[high_corr_pairs[,1]],
+  Stock2 = rownames(correlation_matrix)[high_corr_pairs[,2]],
+  Correlation = correlation_matrix[high_corr_pairs]
+)
+
+knitr::kable(high_corr_pairs_df, 
+             caption = &quot;相关性较高的股票对&quot;, 
+             digits = 4,
+             booktabs = TRUE)</code></pre>
+<table>
+<caption>(#tab:correlation_analysis)相关性较高的股票对</caption>
+<thead>
+<tr class="header">
+<th align="left">Stock1</th>
+<th align="left">Stock2</th>
+<th align="right">Correlation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">AAPL</td>
+<td align="left">MSFT</td>
+<td align="right">0.9722</td>
+</tr>
+<tr class="even">
+<td align="left">AAPL</td>
+<td align="left">AMZN</td>
+<td align="right">0.8029</td>
+</tr>
+<tr class="odd">
+<td align="left">MSFT</td>
+<td align="left">AMZN</td>
+<td align="right">0.8451</td>
+</tr>
+<tr class="even">
+<td align="left">AAPL</td>
+<td align="left">GOOGL</td>
+<td align="right">0.9316</td>
+</tr>
+<tr class="odd">
+<td align="left">MSFT</td>
+<td align="left">GOOGL</td>
+<td align="right">0.9611</td>
+</tr>
+<tr class="even">
+<td align="left">AMZN</td>
+<td align="left">GOOGL</td>
+<td align="right">0.8044</td>
+</tr>
+<tr class="odd">
+<td align="left">AMZN</td>
+<td align="left">META</td>
+<td align="right">0.8391</td>
+</tr>
+<tr class="even">
+<td align="left">META</td>
+<td align="left">NFLX</td>
+<td align="right">0.8551</td>
+</tr>
+<tr class="odd">
+<td align="left">AAPL</td>
+<td align="left">TSLA</td>
+<td align="right">0.9618</td>
+</tr>
+<tr class="even">
+<td align="left">MSFT</td>
+<td align="left">TSLA</td>
+<td align="right">0.9439</td>
+</tr>
+<tr class="odd">
+<td align="left">GOOGL</td>
+<td align="left">TSLA</td>
+<td align="right">0.9418</td>
+</tr>
+<tr class="even">
+<td align="left">AAPL</td>
+<td align="left">NVDA</td>
+<td align="right">0.9228</td>
+</tr>
+<tr class="odd">
+<td align="left">MSFT</td>
+<td align="left">NVDA</td>
+<td align="right">0.9411</td>
+</tr>
+<tr class="even">
+<td align="left">GOOGL</td>
+<td align="left">NVDA</td>
+<td align="right">0.9594</td>
+</tr>
+<tr class="odd">
+<td align="left">TSLA</td>
+<td align="left">NVDA</td>
+<td align="right">0.9357</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="协整检验-1" class="section level2">
+<h2>协整检验</h2>
+<p>对相关性较高的股票对进行协整检验：</p>
+<pre class="r"><code># 创建一个函数进行Engle-Granger协整检验
+perform_eg_test &lt;- function(series1, series2) {
+  # 第一步：进行线性回归
+  lm_model &lt;- lm(series1 ~ series2)
+  
+  # 第二步：获取残差
+  residuals &lt;- lm_model$residuals
+  
+  # 第三步：对残差进行ADF检验
+  adf_result &lt;- adf.test(residuals)
+  
+  return(list(
+    lm_model = lm_model,
+    adf_result = adf_result,
+    is_cointegrated = adf_result$p.value &lt; 0.05,
+    beta = coef(lm_model)[2],
+    alpha = coef(lm_model)[1],
+    residuals = residuals
+  ))
+}
+
+# 对每对高相关性股票进行协整检验
+cointegration_results &lt;- list()
+
+for(i in 1:nrow(high_corr_pairs_df)) {
+  stock1 &lt;- high_corr_pairs_df$Stock1[i]
+  stock2 &lt;- high_corr_pairs_df$Stock2[i]
+  
+  result &lt;- perform_eg_test(close_prices[, stock1], close_prices[, stock2])
+  
+  cointegration_results[[paste(stock1, stock2, sep = &quot;-&quot;)]] &lt;- list(
+    stock1 = stock1,
+    stock2 = stock2,
+    p_value = result$adf_result$p.value,
+    is_cointegrated = result$is_cointegrated,
+    beta = result$beta,
+    alpha = result$alpha,
+    residuals = result$residuals
+  )
+}
+
+# 提取协整检验结果
+cointegration_summary &lt;- data.frame(
+  Pair = names(cointegration_results),
+  P_Value = sapply(cointegration_results, function(x) x$p_value),
+  Is_Cointegrated = sapply(cointegration_results, function(x) x$is_cointegrated),
+  Beta = sapply(cointegration_results, function(x) x$beta),
+  Alpha = sapply(cointegration_results, function(x) x$alpha)
+)
+
+# 展示协整检验结果
+knitr::kable(cointegration_summary, 
+             caption = &quot;股票对的协整检验结果&quot;, 
+             digits = 4,
+             booktabs = TRUE)</code></pre>
+<table>
+<caption>(#tab:cointegration_test)股票对的协整检验结果</caption>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="left">Pair</th>
+<th align="right">P_Value</th>
+<th align="left">Is_Cointegrated</th>
+<th align="right">Beta</th>
+<th align="right">Alpha</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">AAPL-MSFT</td>
+<td align="left">AAPL-MSFT</td>
+<td align="right">0.3291</td>
+<td align="left">FALSE</td>
+<td align="right">0.6034</td>
+<td align="right">-18.8900</td>
+</tr>
+<tr class="even">
+<td align="left">AAPL-AMZN</td>
+<td align="left">AAPL-AMZN</td>
+<td align="right">0.7377</td>
+<td align="left">FALSE</td>
+<td align="right">1.0447</td>
+<td align="right">-27.0757</td>
+</tr>
+<tr class="odd">
+<td align="left">MSFT-AMZN</td>
+<td align="left">MSFT-AMZN</td>
+<td align="right">0.8092</td>
+<td align="left">FALSE</td>
+<td align="right">1.7716</td>
+<td align="right">-18.3808</td>
+</tr>
+<tr class="even">
+<td align="left">AAPL-GOOGL</td>
+<td align="left">AAPL-GOOGL</td>
+<td align="right">0.5481</td>
+<td align="left">FALSE</td>
+<td align="right">1.4035</td>
+<td align="right">-22.2048</td>
+</tr>
+<tr class="odd">
+<td align="left">MSFT-GOOGL</td>
+<td align="left">MSFT-GOOGL</td>
+<td align="right">0.6072</td>
+<td align="left">FALSE</td>
+<td align="right">2.3331</td>
+<td align="right">-6.0949</td>
+</tr>
+<tr class="even">
+<td align="left">AMZN-GOOGL</td>
+<td align="left">AMZN-GOOGL</td>
+<td align="right">0.7852</td>
+<td align="left">FALSE</td>
+<td align="right">0.9315</td>
+<td align="right">39.9734</td>
+</tr>
+<tr class="odd">
+<td align="left">AMZN-META</td>
+<td align="left">AMZN-META</td>
+<td align="right">0.0442</td>
+<td align="left">TRUE</td>
+<td align="right">0.4463</td>
+<td align="right">22.5573</td>
+</tr>
+<tr class="even">
+<td align="left">META-NFLX</td>
+<td align="left">META-NFLX</td>
+<td align="right">0.2425</td>
+<td align="left">FALSE</td>
+<td align="right">0.4793</td>
+<td align="right">32.0470</td>
+</tr>
+<tr class="odd">
+<td align="left">AAPL-TSLA</td>
+<td align="left">AAPL-TSLA</td>
+<td align="right">0.0717</td>
+<td align="left">FALSE</td>
+<td align="right">0.3780</td>
+<td align="right">48.2774</td>
+</tr>
+<tr class="even">
+<td align="left">MSFT-TSLA</td>
+<td align="left">MSFT-TSLA</td>
+<td align="right">0.2255</td>
+<td align="left">FALSE</td>
+<td align="right">0.5977</td>
+<td align="right">115.1065</td>
+</tr>
+<tr class="odd">
+<td align="left">GOOGL-TSLA</td>
+<td align="left">GOOGL-TSLA</td>
+<td align="right">0.0940</td>
+<td align="left">FALSE</td>
+<td align="right">0.2457</td>
+<td align="right">53.3358</td>
+</tr>
+<tr class="even">
+<td align="left">AAPL-NVDA</td>
+<td align="left">AAPL-NVDA</td>
+<td align="right">0.2053</td>
+<td align="left">FALSE</td>
+<td align="right">5.8621</td>
+<td align="right">29.9229</td>
+</tr>
+<tr class="odd">
+<td align="left">MSFT-NVDA</td>
+<td align="left">MSFT-NVDA</td>
+<td align="right">0.3136</td>
+<td align="left">FALSE</td>
+<td align="right">9.6320</td>
+<td align="right">81.8640</td>
+</tr>
+<tr class="even">
+<td align="left">GOOGL-NVDA</td>
+<td align="left">GOOGL-NVDA</td>
+<td align="right">0.0757</td>
+<td align="left">FALSE</td>
+<td align="right">4.0452</td>
+<td align="right">38.6694</td>
+</tr>
+<tr class="odd">
+<td align="left">TSLA-NVDA</td>
+<td align="left">TSLA-NVDA</td>
+<td align="right">0.0916</td>
+<td align="left">FALSE</td>
+<td align="right">15.1244</td>
+<td align="right">-44.0953</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code># 找出存在协整关系的股票对
+cointegrated_pairs &lt;- cointegration_summary[cointegration_summary$Is_Cointegrated, ]
+
+# 展示存在协整关系的股票对
+if(nrow(cointegrated_pairs) &gt; 0) {
+  knitr::kable(cointegrated_pairs, 
+               caption = &quot;存在协整关系的股票对&quot;, 
+               digits = 4,
+               booktabs = TRUE)
+} else {
+  print(&quot;未找到存在协整关系的股票对&quot;)
+}</code></pre>
+<table>
+<caption>(#tab:cointegration_test)存在协整关系的股票对</caption>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="left">Pair</th>
+<th align="right">P_Value</th>
+<th align="left">Is_Cointegrated</th>
+<th align="right">Beta</th>
+<th align="right">Alpha</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">AMZN-META</td>
+<td align="left">AMZN-META</td>
+<td align="right">0.0442</td>
+<td align="left">TRUE</td>
+<td align="right">0.4463</td>
+<td align="right">22.5573</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="可视化协整关系" class="section level2">
+<h2>可视化协整关系</h2>
+<p>选择一个存在协整关系的股票对，可视化其价格走势和协整残差：</p>
+<pre class="r"><code># 如果存在协整对，选择第一个进行可视化
+if(nrow(cointegrated_pairs) &gt; 0) {
+  selected_pair &lt;- cointegrated_pairs$Pair[1]
+  stock1 &lt;- cointegration_results[[selected_pair]]$stock1
+  stock2 &lt;- cointegration_results[[selected_pair]]$stock2
+  
+  # 绘制价格走势图
+  price_df &lt;- data.frame(
+    date = index(close_prices),
+    Stock1 = close_prices[, stock1],
+    Stock2 = close_prices[, stock2],
+    row.names = NULL,  # 明确指定没有行名
+    stringsAsFactors = FALSE  # 避免因子转换警告
+  )
+  
+  price_long &lt;- reshape2::melt(price_df, id.vars = &quot;date&quot;)
+  
+  ggplot(price_long, aes(x = date, y = value, color = variable)) +
+    geom_line() +
+    labs(title = paste(stock1, &quot;和&quot;, stock2, &quot;的价格走势&quot;),
+         x = &quot;日期&quot;,
+         y = &quot;价格&quot;,
+         color = &quot;股票&quot;) +
+    theme_minimal()
+  
+  # 绘制标准化后的价格走势（便于比较）
+  normalized_prices &lt;- data.frame(
+    date = index(close_prices),
+    Stock1 = close_prices[, stock1] / close_prices[1, stock1],
+    Stock2 = close_prices[, stock2] / close_prices[1, stock2],
+    row.names = NULL,  # 明确指定没有行名
+    stringsAsFactors = FALSE  # 避免因子转换警告
+  )
+  
+  normalized_long &lt;- reshape2::melt(normalized_prices, id.vars = &quot;date&quot;)
+  
+  ggplot(normalized_long, aes(x = date, y = value, color = variable)) +
+    geom_line() +
+    labs(title = paste(stock1, &quot;和&quot;, stock2, &quot;的标准化价格走势&quot;),
+         x = &quot;日期&quot;,
+         y = &quot;标准化价格&quot;,
+         color = &quot;股票&quot;) +
+    theme_minimal()
+  
+  # 绘制协整残差图
+  residuals &lt;- cointegration_results[[selected_pair]]$residuals
+  # 确保日期和残差长度一致
+  date_index &lt;- index(close_prices)
+  if(length(residuals) &lt; length(date_index)) {
+    date_index &lt;- date_index[-1]
+  }
+  if(length(residuals) &gt; length(date_index)) {
+    residuals &lt;- residuals[-length(residuals)]
+  }
+  
+  residuals_df &lt;- data.frame(
+    date = date_index,
+    residual = residuals,
+    row.names = NULL,  # 明确指定没有行名
+    stringsAsFactors = FALSE  # 避免因子转换警告
+  )
+  
+  ggplot(residuals_df, aes(x = date, y = residual)) +
+    geom_line() +
+    geom_hline(yintercept = 0, color = &quot;red&quot;, linetype = &quot;dashed&quot;) +
+    labs(title = paste(stock1, &quot;和&quot;, stock2, &quot;的协整残差&quot;),
+         x = &quot;日期&quot;,
+         y = &quot;残差&quot;) +
+    theme_minimal()
+  
+  # 绘制残差的密度图
+  ggplot(residuals_df, aes(x = residual)) +
+    geom_density() +
+    geom_vline(xintercept = 0, color = &quot;red&quot;, linetype = &quot;dashed&quot;) +
+    labs(title = paste(stock1, &quot;和&quot;, stock2, &quot;的残差密度分布&quot;),
+         x = &quot;残差&quot;,
+         y = &quot;密度&quot;) +
+    theme_minimal()
+}</code></pre>
+<p><img src="/docs/pairs-trading_files/figure-html/visualize_cointegration-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="构建配对交易策略" class="section level2">
+<h2>构建配对交易策略</h2>
+<p>基于协整残差构建配对交易策略：</p>
+<pre class="r"><code># 如果存在协整对，构建配对交易策略
+if(nrow(cointegrated_pairs) &gt; 0) {
+  selected_pair &lt;- cointegrated_pairs$Pair[1]
+  stock1 &lt;- cointegration_results[[selected_pair]]$stock1
+  stock2 &lt;- cointegration_results[[selected_pair]]$stock2
+  beta &lt;- cointegration_results[[selected_pair]]$beta
+  residuals &lt;- cointegration_results[[selected_pair]]$residuals
+  
+  # 计算残差的均值和标准差
+  mean_residual &lt;- mean(residuals)
+  sd_residual &lt;- sd(residuals)
+  
+  # 设置交易阈值（以标准差为单位）
+  entry_threshold &lt;- 2
+  exit_threshold &lt;- 0.5
+  
+  # 确保日期和残差长度一致
+  date_index &lt;- index(close_prices)
+  if(length(residuals) &lt; length(date_index)) {
+    date_index &lt;- date_index[-1]  # 移除第一个日期
+  } else if(length(residuals) &gt; length(date_index)) {
+    residuals &lt;- residuals[-length(residuals)]  # 移除最后一个残差
+  }
+  
+  # 创建交易信号
+  signals &lt;- data.frame(
+    date = date_index,
+    residual = residuals,
+    signal = 0,
+    row.names = NULL,        # 明确指定不使用行名
+    stringsAsFactors = FALSE # 防止字符串自动转换为因子
+  )
+  
+  # 生成交易信号
+  # 1: 做多stock1，做空stock2
+  # -1: 做空stock1，做多stock2
+  # 0: 不持仓
+  for(i in 1:nrow(signals)) {
+    if(signals$residual[i] &gt; mean_residual + entry_threshold * sd_residual) {
+      signals$signal[i] &lt;- -1  # 残差过高，stock1被高估，stock2被低估
+    } else if(signals$residual[i] &lt; mean_residual - entry_threshold * sd_residual) {
+      signals$signal[i] &lt;- 1   # 残差过低，stock1被低估，stock2被高估
+    } else if(abs(signals$residual[i] - mean_residual) &lt; exit_threshold * sd_residual) {
+      signals$signal[i] &lt;- 0   # 残差接近均值，平仓
+    } else {
+      # 保持前一天的信号
+      if(i &gt; 1) {
+        signals$signal[i] &lt;- signals$signal[i-1]
+      }
+    }
+  }
+  
+  # 计算持仓变化
+  positions &lt;- signals
+  positions$position &lt;- c(0, diff(positions$signal))
+  
+  # 计算收益率
+  stock1_returns &lt;- diff(log(close_prices[, stock1]))
+  stock2_returns &lt;- diff(log(close_prices[, stock2]))
+  
+  # 确保收益率长度与信号长度匹配
+  # 移除收益率序列中多余的元素
+  min_length &lt;- min(length(stock1_returns), length(stock2_returns), nrow(signals) - 1)
+  stock1_returns &lt;- stock1_returns[1:min_length]
+  stock2_returns &lt;- stock2_returns[1:min_length]
+  
+  # 确保信号和持仓长度与收益率匹配
+  # 移除第一个日期对应的信号和持仓（因为没有对应的收益率）
+  signal_values &lt;- signals$signal[2:(min_length + 1)]
+  position_values &lt;- positions$position[2:(min_length + 1)]
+  
+  # 计算策略收益率
+  strategy_returns &lt;- data.frame(
+    date = signals$date[2:(min_length + 1)],  # 使用调整后的日期
+    stock1_returns = stock1_returns,
+    stock2_returns = stock2_returns,
+    signal = signal_values,
+    position = position_values,
+    row.names = NULL,        # 明确指定不使用行名
+    stringsAsFactors = FALSE # 防止字符串自动转换为因子
+  )
+  
+  colnames(strategy_returns) &lt;- c(&quot;date&quot;, &quot;stock1_returns&quot;, &quot;stock2_returns&quot;, &quot;signal&quot;, &quot;position&quot;)
+  
+  # 计算每日策略收益
+  strategy_returns$daily_return &lt;- strategy_returns$signal * (strategy_returns$stock1_returns - beta * strategy_returns$stock2_returns)
+  
+  # 计算累计收益
+  strategy_returns$cumulative_return &lt;- cumsum(strategy_returns$daily_return)
+  
+  # 可视化策略表现
+  ggplot(strategy_returns, aes(x = date, y = cumulative_return)) +
+    geom_line() +
+    labs(title = paste(stock1, &quot;和&quot;, stock2, &quot;的配对交易策略累计收益&quot;),
+         x = &quot;日期&quot;,
+         y = &quot;累计收益&quot;) +
+    theme_minimal()
+  
+  # 绘制交易信号
+  signal_plot_data &lt;- signals
+  signal_plot_data$signal_factor &lt;- factor(signal_plot_data$signal, levels = c(-1, 0, 1), labels = c(&quot;做空&quot;, &quot;平仓&quot;, &quot;做多&quot;))
+  
+  ggplot(signal_plot_data, aes(x = date, y = residual)) +
+    geom_line() +
+    geom_hline(yintercept = mean_residual, color = &quot;black&quot;, linetype = &quot;dashed&quot;) +
+    geom_hline(yintercept = mean_residual + entry_threshold * sd_residual, color = &quot;red&quot;, linetype = &quot;dashed&quot;) +
+    geom_hline(yintercept = mean_residual - entry_threshold * sd_residual, color = &quot;red&quot;, linetype = &quot;dashed&quot;) +
+    geom_hline(yintercept = mean_residual + exit_threshold * sd_residual, color = &quot;blue&quot;, linetype = &quot;dashed&quot;) +
+    geom_hline(yintercept = mean_residual - exit_threshold * sd_residual, color = &quot;blue&quot;, linetype = &quot;dashed&quot;) +
+    geom_point(aes(color = signal_factor), size = 2) +
+    scale_color_manual(values = c(&quot;做空&quot; = &quot;red&quot;, &quot;平仓&quot; = &quot;gray&quot;, &quot;做多&quot; = &quot;green&quot;)) +
+    labs(title = paste(stock1, &quot;和&quot;, stock2, &quot;的配对交易信号&quot;),
+         x = &quot;日期&quot;,
+         y = &quot;残差&quot;,
+         color = &quot;信号&quot;) +
+    theme_minimal()
+}</code></pre>
+<p><img src="/docs/pairs-trading_files/figure-html/pairs_trading_strategy-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="策略绩效评估" class="section level2">
+<h2>策略绩效评估</h2>
+<p>评估配对交易策略的绩效：</p>
+<pre class="r"><code># 如果存在协整对，评估策略绩效
+if(nrow(cointegrated_pairs) &gt; 0) {
+  # 计算策略绩效指标
+  annual_return &lt;- mean(strategy_returns$daily_return) * 252
+  annual_volatility &lt;- sd(strategy_returns$daily_return) * sqrt(252)
+  sharpe_ratio &lt;- annual_return / annual_volatility
+  
+  # 计算最大回撤
+  strategy_returns$cumulative_max &lt;- cummax(strategy_returns$cumulative_return)
+  strategy_returns$drawdown &lt;- strategy_returns$cumulative_max - strategy_returns$cumulative_return
+  max_drawdown &lt;- max(strategy_returns$drawdown)
+  
+  # 计算胜率
+  trades &lt;- strategy_returns[strategy_returns$position != 0, ]
+  winning_trades &lt;- trades[trades$daily_return &gt; 0, ]
+  win_rate &lt;- nrow(winning_trades) / nrow(trades)
+  
+  # 计算盈亏比
+  if(nrow(winning_trades) &gt; 0 &amp;&amp; nrow(trades[trades$daily_return &lt; 0, ]) &gt; 0) {
+    profit_factor &lt;- mean(winning_trades$daily_return) / abs(mean(trades[trades$daily_return &lt; 0, ]$daily_return))
+  } else {
+    profit_factor &lt;- NA
+  }
+  
+  # 创建绩效指标数据框
+  performance_metrics &lt;- data.frame(
+    Metric = c(&quot;年化收益率&quot;, &quot;年化波动率&quot;, &quot;夏普比率&quot;, &quot;最大回撤&quot;, &quot;胜率&quot;, &quot;盈亏比&quot;),
+    Value = c(annual_return, annual_volatility, sharpe_ratio, max_drawdown, win_rate, profit_factor)
+  )
+  
+  # 展示绩效指标
+  knitr::kable(performance_metrics, 
+               caption = &quot;配对交易策略绩效指标&quot;, 
+               digits = 4,
+               booktabs = TRUE)
+  
+  # 绘制回撤图
+  ggplot(strategy_returns, aes(x = date, y = drawdown)) +
+    geom_line() +
+    labs(title = paste(stock1, &quot;和&quot;, stock2, &quot;的配对交易策略回撤&quot;),
+         x = &quot;日期&quot;,
+         y = &quot;回撤&quot;) +
+    theme_minimal()
+  
+  # 使用PerformanceAnalytics包计算更多绩效指标
+  returns_xts &lt;- xts(strategy_returns$daily_return, order.by = strategy_returns$date)
+  colnames(returns_xts) &lt;- &quot;Strategy&quot;
+  
+  # 计算绩效指标
+  performance_summary &lt;- table.Stats(returns_xts)
+  
+  # 展示更多绩效指标
+  knitr::kable(performance_summary, 
+               caption = &quot;配对交易策略详细绩效指标&quot;, 
+               digits = 4,
+               booktabs = TRUE)
+}</code></pre>
+<table>
+<caption>(#tab:performance_evaluation)配对交易策略详细绩效指标</caption>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">Strategy</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Observations</td>
+<td align="right">1257.0000</td>
+</tr>
+<tr class="even">
+<td align="left">NAs</td>
+<td align="right">1.0000</td>
+</tr>
+<tr class="odd">
+<td align="left">Minimum</td>
+<td align="right">-0.1031</td>
+</tr>
+<tr class="even">
+<td align="left">Quartile 1</td>
+<td align="right">0.0000</td>
+</tr>
+<tr class="odd">
+<td align="left">Median</td>
+<td align="right">0.0000</td>
+</tr>
+<tr class="even">
+<td align="left">Arithmetic Mean</td>
+<td align="right">0.0005</td>
+</tr>
+<tr class="odd">
+<td align="left">Geometric Mean</td>
+<td align="right">0.0005</td>
+</tr>
+<tr class="even">
+<td align="left">Quartile 3</td>
+<td align="right">0.0000</td>
+</tr>
+<tr class="odd">
+<td align="left">Maximum</td>
+<td align="right">0.0762</td>
+</tr>
+<tr class="even">
+<td align="left">SE Mean</td>
+<td align="right">0.0003</td>
+</tr>
+<tr class="odd">
+<td align="left">LCL Mean (0.95)</td>
+<td align="right">0.0000</td>
+</tr>
+<tr class="even">
+<td align="left">UCL Mean (0.95)</td>
+<td align="right">0.0011</td>
+</tr>
+<tr class="odd">
+<td align="left">Variance</td>
+<td align="right">0.0001</td>
+</tr>
+<tr class="even">
+<td align="left">Stdev</td>
+<td align="right">0.0098</td>
+</tr>
+<tr class="odd">
+<td align="left">Skewness</td>
+<td align="right">-0.8836</td>
+</tr>
+<tr class="even">
+<td align="left">Kurtosis</td>
+<td align="right">27.9065</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="样本外回测" class="section level2">
+<h2>样本外回测</h2>
+<p>使用样本外数据验证策略的有效性：</p>
+<pre class="r"><code># 设置样本外时间范围
+oos_start_date &lt;- &quot;2023-01-02&quot;
+oos_end_date &lt;- &quot;2024-12-31&quot;
+
+# 如果存在协整对，进行样本外回测
+if(nrow(cointegrated_pairs) &gt; 0) {
+  selected_pair &lt;- cointegrated_pairs$Pair[1]
+  stock1 &lt;- cointegration_results[[selected_pair]]$stock1
+  stock2 &lt;- cointegration_results[[selected_pair]]$stock2
+  beta &lt;- cointegration_results[[selected_pair]]$beta
+  
+  # 获取样本外数据
+  oos_stock1 &lt;- getSymbols(stock1, from = oos_start_date, to = oos_end_date, auto.assign = FALSE)
+  oos_stock2 &lt;- getSymbols(stock2, from = oos_start_date, to = oos_end_date, auto.assign = FALSE)
+  
+  # 提取收盘价
+  oos_stock1_close &lt;- Cl(oos_stock1)
+  oos_stock2_close &lt;- Cl(oos_stock2)
+  
+  # 合并数据
+  oos_data &lt;- merge(oos_stock1_close, oos_stock2_close)
+  colnames(oos_data) &lt;- c(stock1, stock2)
+  
+  # 计算样本外残差
+  oos_residuals &lt;- as.numeric(oos_data[, stock1]) - cointegration_results[[selected_pair]]$alpha - beta * as.numeric(oos_data[, stock2])
+  
+  # 使用与样本内相同的阈值生成交易信号
+  oos_signals &lt;- data.frame(
+    date = index(oos_data),
+    residual = oos_residuals,
+    signal = 0
+  )
+  
+  for(i in 1:nrow(oos_signals)) {
+    if(oos_signals$residual[i] &gt; mean_residual + entry_threshold * sd_residual) {
+      oos_signals$signal[i] &lt;- -1
+    } else if(oos_signals$residual[i] &lt; mean_residual - entry_threshold * sd_residual) {
+      oos_signals$signal[i] &lt;- 1
+    } else if(abs(oos_signals$residual[i] - mean_residual) &lt; exit_threshold * sd_residual) {
+      oos_signals$signal[i] &lt;- 0
+    } else {
+      if(i &gt; 1) {
+        oos_signals$signal[i] &lt;- oos_signals$signal[i-1]
+      }
+    }
+  }
+  
+  # 计算持仓变化
+  oos_positions &lt;- oos_signals
+  oos_positions$position &lt;- c(0, diff(oos_positions$signal))
+  
+  # 计算收益率
+  oos_stock1_returns &lt;- diff(log(oos_data[, stock1]))[-1]
+  oos_stock2_returns &lt;- diff(log(oos_data[, stock2]))[-1]
+  
+  # 计算策略收益率
+  oos_strategy_returns &lt;- data.frame(
+    date = index(oos_data)[-1],  #
+    stock1_returns = oos_stock1_returns,
+    stock2_returns = oos_stock2_returns,
+    signal = oos_signals$signal[-length(oos_signals$signal)],
+    position = oos_positions$position[-length(oos_positions$position)]
+  )
+  
+  colnames(oos_strategy_returns) &lt;- c(&quot;date&quot;, &quot;stock1_returns&quot;, &quot;stock2_returns&quot;, &quot;signal&quot;, &quot;position&quot;)
+  # 计算每日策略收益
+  oos_strategy_returns$daily_return &lt;- oos_strategy_returns$signal * (oos_strategy_returns$stock1_returns - beta * oos_strategy_returns$stock2_returns)
+  
+  # 计算累计收益
+  oos_strategy_returns$cumulative_return &lt;- cumsum(oos_strategy_returns$daily_return)
+ 
+  # 可视化样本外策略表现
+  ggplot(oos_strategy_returns, aes(x = date, y = cumulative_return)) +
+    geom_line() +
+    labs(title = paste(stock1, &quot;和&quot;, stock2, &quot;的配对交易策略样本外累计收益&quot;),
+         x = &quot;日期&quot;,
+         y = &quot;累计收益&quot;) +
+    theme_minimal()
+  
+  # 计算样本外绩效指标
+  oos_annual_return &lt;- mean(oos_strategy_returns$daily_return) * 252 # 年化收益率
+  oos_annual_volatility &lt;- sd(oos_strategy_returns$daily_return) * sqrt(252) # 年化波动率
+  oos_strategy_returns$cumulative_max &lt;- cummax(oos_strategy_returns$cumulative_return) # 累计最大值
+  oos_sharpe_ratio &lt;- ifelse(oos_annual_volatility != 0, oos_annual_return / oos_annual_volatility, NA) # 夏普比率
+  oos_strategy_returns$drawdown &lt;- oos_strategy_returns$cumulative_max - oos_strategy_returns$cumulative_return #回撤
+  oos_max_drawdown &lt;- max(oos_strategy_returns$drawdown) # 最大回撤
+  
+  
+  # 计算样本内绩效指标
+  strategy_annual_return &lt;- mean(na.omit(strategy_returns$daily_return)) * 252 # 年化收益率
+  strategy_annual_volatility &lt;- sd(na.omit(strategy_returns$daily_return)) * sqrt(252) # 年化波动率
+  strategy_sharpe_ratio &lt;- ifelse(strategy_annual_volatility != 0, strategy_annual_return / strategy_annual_volatility, NA) # 夏普比率
+  strategy_cumulative_return &lt;- cumsum(na.omit(strategy_returns$daily_return))  # 累计收益
+  strategy_cumulative_max &lt;- cummax(strategy_cumulative_return) # 累计最大值
+  strategy_drawdown &lt;- strategy_cumulative_max - strategy_cumulative_return # 回撤
+  strategy_max_drawdown &lt;- max(strategy_drawdown, na.rm = TRUE) # 最大回撤
+
+  
+  # 创建样本外绩效指标数据框
+  oos_performance_metrics &lt;- data.frame(
+    Metric = c(&quot;年化收益率&quot;, &quot;年化波动率&quot;, &quot;夏普比率&quot;, &quot;最大回撤&quot;),
+    InSample = c(strategy_annual_return, strategy_annual_volatility, strategy_sharpe_ratio, strategy_max_drawdown),
+    OutOfSample = c(oos_annual_return, oos_annual_volatility, oos_sharpe_ratio, oos_max_drawdown)
+  )
+  
+  # 展示样本外绩效指标
+  knitr::kable(oos_performance_metrics, 
+               caption = &quot;配对交易策略样本内外绩效对比&quot;, 
+               digits = 4,
+               booktabs = TRUE)
+}</code></pre>
+<table>
+<caption>(#tab:out_of_sample_backtest)配对交易策略样本内外绩效对比</caption>
+<thead>
+<tr class="header">
+<th align="left">Metric</th>
+<th align="right">InSample</th>
+<th align="right">OutOfSample</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">年化收益率</td>
+<td align="right">0.1278</td>
+<td align="right">0.0802</td>
+</tr>
+<tr class="even">
+<td align="left">年化波动率</td>
+<td align="right">0.1561</td>
+<td align="right">0.1595</td>
+</tr>
+<tr class="odd">
+<td align="left">夏普比率</td>
+<td align="right">0.8191</td>
+<td align="right">0.5029</td>
+</tr>
+<tr class="even">
+<td align="left">最大回撤</td>
+<td align="right">0.1881</td>
+<td align="right">0.1974</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="敏感性分析" class="section level1">
+<h1>敏感性分析</h1>
+<div id="阈值参数敏感性分析" class="section level2">
+<h2>阈值参数敏感性分析</h2>
+<p>分析不同的交易阈值对策略绩效的影响：</p>
+<pre class="r"><code># 如果存在协整对，进行阈值敏感性分析
+if(nrow(cointegrated_pairs) &gt; 0) {
+  selected_pair &lt;- cointegrated_pairs$Pair[1]
+  stock1 &lt;- cointegration_results[[selected_pair]]$stock1
+  stock2 &lt;- cointegration_results[[selected_pair]]$stock2
+  beta &lt;- cointegration_results[[selected_pair]]$beta
+  residuals &lt;- cointegration_results[[selected_pair]]$residuals
+  
+  # 设置不同的阈值组合
+  entry_thresholds &lt;- seq(1.5, 3, by = 0.5)
+  exit_thresholds &lt;- seq(0.2, 1, by = 0.2)
+  
+  # 创建结果数据框
+  sensitivity_results &lt;- data.frame()
+  
+  # 对每个阈值组合进行回测
+  for(entry in entry_thresholds) {
+    for(exit in exit_thresholds) {
+      if(exit &lt; entry) {  # 确保退出阈值小于进入阈值
+        # 创建交易信号
+        signals &lt;- data.frame(
+          date = index(close_prices),  # 去除第一个NA
+          residual = residuals,
+          signal = 0
+        )
+        
+        # 生成交易信号
+        for(i in 1:nrow(signals)) {
+          if(signals$residual[i] &gt; mean_residual + entry * sd_residual) {
+            signals$signal[i] &lt;- -1
+          } else if(signals$residual[i] &lt; mean_residual - entry * sd_residual) {
+            signals$signal[i] &lt;- 1
+          } else if(abs(signals$residual[i] - mean_residual) &lt; exit * sd_residual) {
+            signals$signal[i] &lt;- 0
+          } else {
+            if(i &gt; 1) {
+              signals$signal[i] &lt;- signals$signal[i-1]
+            }
+          }
+        }
+        
+        # 计算持仓变化
+        positions &lt;- signals
+        positions$position &lt;- c(0, diff(positions$signal))
+        
+        # 计算收益率
+        stock1_returns &lt;- diff(log(close_prices[, stock1]))[-1]
+        stock2_returns &lt;- diff(log(close_prices[, stock2]))[-1]
+        
+        # 计算策略收益率
+        strategy_returns &lt;- data.frame(
+          date = index(close_prices)[-1],  # 去除前两个NA
+          stock1_returns = stock1_returns,
+          stock2_returns = stock2_returns,
+          signal = signals$signal[-length(signals$signal)],
+          position = positions$position[-length(positions$position)]
+        )
+        colnames(strategy_returns) &lt;- c(&quot;date&quot;, &quot;stock1_returns&quot;, &quot;stock2_returns&quot;, &quot;signal&quot;, &quot;position&quot;)
+        
+        # 计算每日策略收益
+        strategy_returns$daily_return &lt;- strategy_returns$signal * (strategy_returns$stock1_returns - beta * strategy_returns$stock2_returns)
+        
+        # 计算绩效指标
+        annual_return &lt;- mean(strategy_returns$daily_return) * 252
+        annual_volatility &lt;- sd(strategy_returns$daily_return) * sqrt(252)
+        sharpe_ratio &lt;- ifelse(annual_volatility != 0, annual_return / annual_volatility, NA)
+        
+        # 计算最大回撤
+        strategy_returns$cumulative_max &lt;- cummax(cumsum(strategy_returns$daily_return))
+        strategy_returns$drawdown &lt;- strategy_returns$cumulative_max - cumsum(strategy_returns$daily_return)
+        max_drawdown &lt;- max(strategy_returns$drawdown)
+        
+        # 计算交易次数
+        num_trades &lt;- sum(abs(positions$position) &gt; 0)
+        
+        # 存储结果
+        sensitivity_results &lt;- rbind(sensitivity_results, data.frame(
+          Entry_Threshold = entry,
+          Exit_Threshold = exit,
+          Annual_Return = annual_return,
+          Annual_Volatility = annual_volatility,
+          Sharpe_Ratio = sharpe_ratio,
+          Max_Drawdown = max_drawdown,
+          Num_Trades = num_trades
+        ))
+      }
+    }
+  }
+  
+  # 展示敏感性分析结果
+  knitr::kable(sensitivity_results, 
+               caption = &quot;不同阈值组合下的策略绩效&quot;, 
+               digits = 4,
+               booktabs = TRUE)
+  
+  # 绘制夏普比率热力图
+  library(reshape2)
+  sharpe_matrix &lt;- acast(sensitivity_results, Entry_Threshold ~ Exit_Threshold, value.var = &quot;Sharpe_Ratio&quot;)
+  
+  ggplot(melt(sharpe_matrix), aes(x = Var2, y = Var1, fill = value)) +
+    geom_tile() +
+    scale_fill_gradient(low = &quot;blue&quot;, high = &quot;red&quot;) +
+    labs(title = &quot;不同阈值组合下的夏普比率&quot;,
+         x = &quot;退出阈值&quot;,
+         y = &quot;进入阈值&quot;,
+         fill = &quot;夏普比率&quot;) +
+    theme_minimal()
+  
+  # 找出最优阈值组合
+  best_thresholds &lt;- sensitivity_results[which.max(sensitivity_results$Sharpe_Ratio), ]
+  row.names(best_thresholds) &lt;- NULL
+  
+  
+  knitr::kable(best_thresholds, 
+               caption = &quot;配对交易策略最优阈值组合&quot;, 
+               digits = 4,
+               booktabs = TRUE)
+}</code></pre>
+<table>
+<caption>(#tab:sensitivity_analysis)配对交易策略最优阈值组合</caption>
+<colgroup>
+<col width="16%" />
+<col width="15%" />
+<col width="14%" />
+<col width="18%" />
+<col width="13%" />
+<col width="13%" />
+<col width="11%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="right">Entry_Threshold</th>
+<th align="right">Exit_Threshold</th>
+<th align="right">Annual_Return</th>
+<th align="right">Annual_Volatility</th>
+<th align="right">Sharpe_Ratio</th>
+<th align="right">Max_Drawdown</th>
+<th align="right">Num_Trades</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">1.5</td>
+<td align="right">0.4</td>
+<td align="right">0.2407</td>
+<td align="right">0.1684</td>
+<td align="right">1.4297</td>
+<td align="right">0.1524</td>
+<td align="right">7</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="结论与讨论" class="section level1">
+<h1>结论与讨论</h1>
+<div id="研究结论" class="section level2">
+<h2>研究结论</h2>
+<p>通过对协整理论和配对交易策略的实证分析，我们得出以下主要结论：</p>
+<ol style="list-style-type: decimal">
+<li><p><strong>协整关系的识别</strong>：通过单位根检验和协整检验，我们成功识别了具有协整关系的股票对，这些股票对的价格走势存在长期均衡关系。</p></li>
+<li><p><strong>配对交易策略有效性</strong>：基于协整残差构建的配对交易策略在样本内和样本外均表现出稳定的超额收益，验证了协整理论在配对交易中的有效性。</p></li>
+<li><p><strong>策略参数敏感性</strong>：交易阈值对策略绩效有显著影响，存在最优的阈值组合能够最大化夏普比率。</p></li>
+<li><p><strong>样本外表现</strong>：尽管样本外表现通常不如样本内，但配对交易策略仍能保持一定的盈利能力，表明该策略具有一定的稳健性。</p></li>
+</ol>
+</div>
+<div id="局限性与改进方向" class="section level2">
+<h2>局限性与改进方向</h2>
+<p>本研究存在以下几点局限性：</p>
+<ol style="list-style-type: decimal">
+<li><p><strong>交易成本忽略</strong>：本研究未考虑交易成本、滑点和冲击成本等实际交易因素，这些因素可能显著影响策略的实际表现。</p></li>
+<li><p><strong>参数稳定性</strong>：协整关系和最优参数可能随时间变化，需要定期重新估计和调整。</p></li>
+<li><p><strong>样本偏差</strong>：研究基于特定时间段的数据，可能存在样本偏差问题。</p></li>
+<li><p><strong>未考虑市场状态</strong>：不同市场状态下（牛市、熊市、震荡市），配对交易策略的表现可能存在差异。</p></li>
+</ol>
+<p>未来研究可以考虑以下改进方向：</p>
+<ol style="list-style-type: decimal">
+<li><p><strong>纳入交易成本</strong>：在策略回测中考虑交易成本、滑点和冲击成本等因素。</p></li>
+<li><p><strong>动态参数调整</strong>：开发动态调整交易阈值和权重的方法，以适应市场变化。</p></li>
+<li><p><strong>多资产组合</strong>：扩展研究范围，考虑多资产组合的配对交易策略。</p></li>
+<li><p><strong>结合其他信号</strong>：将协整信号与其他技术指标或基本面指标结合，提高策略的稳健性。</p></li>
+</ol>
+</div>
+</div>
+<div id="参考文献" class="section level1">
+<h1>参考文献</h1>
+<ol style="list-style-type: decimal">
+<li>Engle, R. F., &amp; Granger, C. W. J. (1987). Co-integration and error correction: representation, estimation, and testing. Econometrica, 55(2), 251-276.</li>
+<li>Vidyamurthy, G. (2004). Pairs trading: quantitative methods and analysis. Wiley.</li>
+<li>Gatev, E., Goetzmann, W. N., &amp; Rouwenhorst, K. G. (2006). Pairs trading: performance of a relative-value arbitrage rule. The Review of Financial Studies, 19(3), 797-827.</li>
+<li>Alexander, C., &amp; Dimitriu, A. (2002). The statistical arbitrage of cointegrated stocks. Working Paper, ISMA Centre, University of Reading.</li>
+<li>R Core Team (2023). R: A language and environment for statistical computing. R Foundation for Statistical Computing, Vienna, Austria.</li>
+<li>Brian G. Peterson and Peter Carl (2023). PerformanceAnalytics: Econometric Tools for Performance and Risk Analysis. R package version 2.0.4.</li>
+<li>Jeffrey A. Ryan and Joshua M. Ulrich (2023). quantmod: Quantitative Financial Modelling Framework. R package version 0.4.24.</li>
+<li>A. Trapletti and K. Hornik (2023). tseries: Time Series Analysis and Computational Finance. R package version 0.10-52.</li>
+<li>Bernhard Pfaff (2023). urca: Unit Root and Cointegration Tests for Time Series Data. R package version 1.3-3.</li>
+<li>Wickham H. (2016). ggplot2: Elegant Graphics for Data Analysis. Springer-Verlag New York.</li>
+<li>Wickham H. (2023). dplyr: A Grammar of Data Manipulation. R package version 1.1.3.</li>
+</ol>
+</div>

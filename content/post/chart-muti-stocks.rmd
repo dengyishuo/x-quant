@@ -16,11 +16,8 @@ categories:
   - "量化投资"
 documentclass: ctexart
 output:
-  rticles::ctex:
-    fig_caption: true
-    number_sections: true
-    toc: true
-    toc_depth: 2
+  html_document:
+    preserve_yaml: true
 ---
 
 ```{R setup, include=FALSE}

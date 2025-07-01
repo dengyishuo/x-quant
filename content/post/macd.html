@@ -1,6 +1,6 @@
 ---
 title: "MACD指标择时交易策略分析"
-author: "Ski/格物堂"
+author: "Ski"
 date: "2025-06-10 15:36:25"
 description: null
 lead: null
@@ -16,11 +16,8 @@ categories:
   - "量化投资"
 documentclass: ctexart
 output:
-  rticles::ctex:
-    fig_caption: true
-    number_sections: true
-    toc: true
-    toc_depth: 2
+  html_document:
+    preserve_yaml: true
 ---
 
 
@@ -98,7 +95,7 @@ EMA_{s} = \frac{2}{N_{s} + 1} \times (Cl - EMA_{s}^{pre}) + EMA_{s}^{pre}
 <span class="math display">\[
 EMA_{l} = \frac{2}{N_{l} + 1} \times (Cl - EMA_{l}^{pre}) + EMA_{l}^{pre}
 \]</span>
-其中，<span class="math inline">\(N_{s}\)</span>通常为12，<span class="math inline">\(N_{l}\)</span>通常为26。</p></li>
+其中，<span class="math inline">\(N_{s}\)</span> 通常为12，<span class="math inline">\(N_{l}\)</span> 通常为26。</p></li>
 <li><p>计算DIF线：
 <span class="math display">\[
 DIF = EMA_{s} - EMA_{l}

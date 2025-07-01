@@ -13,24 +13,15 @@ tags:
   - "择时"
 categories:
   - "量化投资"
+documentclass: ctexart
 output:
-  md_document:
+  html_document:
     preserve_yaml: true
-    variant: markdown_github  
 ---
 
 
 
 <div style="page-break-after: always;"></div>
-<pre class="r"><code>knitr::opts_chunk$set(echo = TRUE, 
-                      warning = FALSE, 
-                      message = FALSE, 
-                      fig.pos = &#39;H&#39;, 
-                      fig.align = &#39;center&#39;, 
-                      fig.width = 6.5, 
-                      fig.height = 4, 
-                      out.width = &quot;90%&quot;, 
-                      width = &quot;90%&quot;)</code></pre>
 <div id="引言" class="section level1">
 <h1>引言</h1>
 <p>技术分析是金融市场中常用的分析方法，其中KDJ指标是一种重要的随机指标，能够反映价格波动的强弱、超买超卖现象以及市场趋势变化。本研究旨在通过R语言实现基于KDJ指标的股票择时交易策略，并通过历史数据回测寻找最佳参数组合。</p>
@@ -68,10 +59,10 @@ getSymbols(&quot;AAPL&quot;, src = &quot;yahoo&quot;, from = startdate.st, to = 
 head(AAPL)</code></pre>
 <pre><code>##               Open    High     Low   Close    Volume Adjusted
 ## 2018-01-02 42.5400 43.0750 42.3150 43.0650 102223600 40.42682
-## 2018-01-03 43.1325 43.6375 42.9900 43.0575 118071600 40.41979
+## 2018-01-03 43.1325 43.6375 42.9900 43.0575 118071600 40.41978
 ## 2018-01-04 43.1350 43.3675 43.0200 43.2575  89738400 40.60754
 ## 2018-01-05 43.3600 43.8425 43.2625 43.7500  94640000 41.06986
-## 2018-01-08 43.5875 43.9025 43.4825 43.5875  82271200 40.91731
+## 2018-01-08 43.5875 43.9025 43.4825 43.5875  82271200 40.91730
 ## 2018-01-09 43.6375 43.7650 43.3525 43.5825  86336000 40.91263</code></pre>
 <pre class="r"><code>summary(AAPL)</code></pre>
 <pre><code>##      Index                 Open             High             Low        
@@ -101,11 +92,11 @@ RSV = \frac{C_t - L_n}{H_n - L_n} \times 100\%
 <li><p>计算K值、D值和J值：
 <span class="math display">\[
 K_{t} = \alpha \times RSV_{t} + (1-\alpha) \times K_{t-1}
-\]</span>
-<span class="math display">\[
+\]</span></p>
+<p><span class="math display">\[
 D_{t} = \beta \times K_t + (1-\beta) \times D_{t-1}
-\]</span>
-<span class="math display">\[
+\]</span></p>
+<p><span class="math display">\[
 J_t = 3 \times K_t - 2 \times D_t
 \]</span></p>
 <p>通常，<span class="math inline">\(\alpha = 1/3\)</span>，<span class="math inline">\(\beta = 1/3\)</span> ，n=9。</p></li>

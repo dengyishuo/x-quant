@@ -13,15 +13,15 @@ tags:
   - "择时"
 categories:
   - "量化投资"
+documentclass: ctexart
 output:
-  md_document:
+  html_document:
     preserve_yaml: true
-    variant: markdown_github  
 ---
 
 \newpage
 
-```{R setup}
+```{R setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, 
                       warning = FALSE, 
                       message = FALSE, 
@@ -91,9 +91,11 @@ KDJ指标由三条曲线组成：K线、D线和J线。其计算基于以下步�
    $$
    K_{t} = \alpha \times RSV_{t} + (1-\alpha) \times K_{t-1}
    $$
+   
    $$
    D_{t} = \beta \times K_t + (1-\beta) \times D_{t-1}
    $$
+   
    $$
    J_t = 3 \times K_t - 2 \times D_t
    $$
