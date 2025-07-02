@@ -17,7 +17,6 @@ googleAnalytics = "" # Enable Google Analytics by entering your tracking id
   pager = true
   post_meta = ["date", "categories"] # Order of post meta information
   mainSections = ["post", "docs"]
-  ignoreLogs = ["warning-goldmark-raw-html"] 
 
 [params.logo]
   subtitle = "探索量化投资之道" # Logo subtitle
@@ -38,3 +37,15 @@ googleAnalytics = "" # Enable Google Analytics by entering your tracking id
   name = "MatrixSpk"
   bio = "MatrixSpk is truely surprised by the power of quantitative models in investment. He is dedicated to exploring how to use these models effectively."
   avatar = "img/avatar.png"
+  
+# 数学公式渲染配置
+[params.math]
+  enable = false  # 全局默认禁用，单篇文章启用
+  mathjaxPath = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"  # 使用 MathJax v3
+  mathjaxConfig = "TeX-AMS-MML_HTMLorMML"  # 标准配置
+# Markdown 渲染优化（修复 smartypants 位置）
+[markup]
+  smartypants = false  # 禁用智能引号转换，避免干扰 LaTeX 公式
+  [markup.goldmark]
+    [markup.goldmark.renderer]
+      unsafe = true  # 允许原始 HTML 和 LaTeX 符号
