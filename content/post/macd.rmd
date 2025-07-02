@@ -14,7 +14,7 @@ tags:
   - "R"
 categories:
   - "量化投资"
-documentclass: ctexart
+mathjax: true
 output:
   html_document:
     preserve_yaml: true

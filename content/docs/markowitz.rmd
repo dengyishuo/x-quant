@@ -7,15 +7,19 @@ description: null
 authorbox: false
 sidebar: false
 pager: false
-tags: ["R", "金融", "马科维茨", "投资组合"]
-categories: ["R语言", "金融数据分析"]
-documentclass: ctexart
+tags: 
+  - "R"
+  - "金融"
+  - "马科维茨"
+  - "投资组合"
+categories: 
+  - "R语言"
+  - "金融数据分析"
+mathjax: true
 output:
   html_document:
     preserve_yaml: true
 ---
-
-\newpage
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, 

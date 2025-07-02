@@ -14,7 +14,7 @@ tags:
   - "R"
 categories:
   - "量化投资"
-documentclass: ctexart
+mathjax: true
 output:
   html_document:
     preserve_yaml: true
@@ -39,11 +39,9 @@ library(ggplot2)    # 可视化
 library(zoo)        # 时间序列处理
 library(dplyr)
 library(showtext)
-font_add("SimHei", "SimHei.ttf")  # 加载SimHei字体
+font_add("SimHei",regular = "SimHei.ttf")  # 加载SimHei字体
 showtext_auto()  # 自动启用showtext
 ```
-
-\newpage
 
 # 前言
 
@@ -312,7 +310,7 @@ ggcorrplot(
 
 ```{R output}
 # 导出为 CSV
-write_csv(stock_data, "stock_prices.csv")
+# write_csv(stock_data, "stock_prices.csv")
 
 # 导出为 Excel（需安装 writexl 包）
 # install.packages("writexl")

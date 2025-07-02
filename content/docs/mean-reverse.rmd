@@ -7,9 +7,15 @@ lead: null
 authorbox: false
 sidebar: false
 pager: false
-tags: ["R", "金融", "协整", "配对交易"]
-categories: ["R语言", "金融数据分析"]
-documentclass: ctexart
+tags: 
+    - "R"
+    - "金融"
+    - "协整"
+    - "配对交易"
+categories: 
+    - "R语言"
+    - "金融数据分析"
+mathjax: true
 output:
   html_document:
     preserve_yaml: true

@@ -9,15 +9,13 @@ sidebar: false
 pager: false
 tags: ["R", "金融", "协整", "配对交易"]
 categories: ["R语言", "金融数据分析"]
-documentclass: ctexart
+mathjax: true
 output:
   html_document:
     preserve_yaml: true
 ---
 
-\newpage
-
-```{R, setup, include = FALSE}
+```{R setup, include = FALSE}
 knitr::opts_chunk$set(echo = TRUE, 
                       warning = FALSE, 
                       message = FALSE, 
@@ -73,7 +71,9 @@ knitr::opts_chunk$set(echo = TRUE,
 ADF检验的原假设为序列存在单位根（非平稳），备择假设为序列不存在单位根（平稳）。检
 验统计量为：
 
-$$\Delta y_{t} = \alpha + \beta t + \gamma y_{t-1} + \sum_{i=1}^{p} \delta_{i} \Delta y_{t-i} + \varepsilon_{t}$$
+$$
+\Delta y_{t} = \alpha + \beta t + \gamma y_{t-1} + \sum_{i=1}^{p} \delta_{i} \Delta y_{t-i} + \varepsilon_{t}
+$$
 
 其中，$\gamma=0$ 表示存在单位根。
 
@@ -89,7 +89,7 @@ KPSS检验与ADF检验相反，其原假设为序列是平稳的，备择假设�
 ### Engle-Granger两步法
 
 Engle-Granger两步法的步骤如下：
-1. 对两个非平稳序列进行线性回归：$y_{t} = \alpha + \beta x_{t} + \varepsilon_{t}$
+1. 对两个非平稳序列进行线性回归：$y_{t} = \alpha + \beta x_{t} + \varepsilon_{t}$ 
 2. 检验回归残差序列 $\hat{\varepsilon}_{t}$ 是否平稳
 3. 如果残差序列平稳，则两个序列存在协整关系
 
@@ -100,14 +100,17 @@ Johansen检验是一种多变量协整检验方法，适用于检验多个时间
 
 ## 误差修正模型(ECM)
 
-如果两个序列存在协整关系，则可以建立误差修正模型来描述它们的短期动态关系。误差修
-正模型的一般形式为：
+如果两个序列存在协整关系，则可以建立误差修正模型来描述它们的短期动态关系。误差修正模型的一般形式为：
 
-$\Delta y_{t} = \alpha_{1} + \sum_{i=1}^{p} \beta_{1i} \Delta y_{t-i} + \sum_{i=0}^{q} \gamma_{1i} \Delta x_{t-i} + \lambda_{1} (y_{t-1} - \beta x_{t-1}) + \varepsilon_{1t}$
+$$
+\Delta y_{t} = \alpha_{1} + \sum_{i=1}^{p} \beta_{1i} \Delta y_{t-i} + \sum_{i=0}^{q} \gamma_{1i} \Delta x_{t-i} + \lambda_{1} (y_{t-1} - \beta x_{t-1}) + \varepsilon_{1t}
+$$
 
-$\Delta x_{t} = \alpha_{2} + \sum_{i=1}^{p} \beta_{2i} \Delta x_{t-i} + \sum_{i=0}^{q} \gamma_{2i} \Delta y_{t-i} + \lambda_2 (y_{t-1} - \beta x_{t-1}) + \varepsilon_{2t}$
+$$
+\Delta x_{t} = \alpha_{2} + \sum_{i=1}^{p} \beta_{2i} \Delta x_{t-i} + \sum_{i=0}^{q} \gamma_{2i} \Delta y_{t-i} + \lambda_2 (y_{t-1} - \beta x_{t-1}) + \varepsilon_{2t}
+$$
 
-其中，$(y_{t-1} - \beta x_{t-1})$ 是误差修正项，表示对长期均衡关系的偏离。
+其中, $(y_{t-1} - \beta x_{t-1})$ 是误差修正项，表示对长期均衡关系的偏离。
 
 # 实证分析
 

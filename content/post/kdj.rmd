@@ -13,13 +13,11 @@ tags:
   - "择时"
 categories:
   - "量化投资"
-documentclass: ctexart
+mathjax: true
 output:
   html_document:
     preserve_yaml: true
 ---
-
-\newpage
 
 ```{R setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, 
@@ -100,7 +98,7 @@ KDJ指标由三条曲线组成：K线、D线和J线。其计算基于以下步�
    J_t = 3 \times K_t - 2 \times D_t
    $$
    
-   通常，$\alpha = 1/3$，$\beta = 1/3$ ，n=9。
+   通常，$\alpha = 1/3$ ，$\beta = 1/3$ ，n=9。
 
 ## 交易策略设计
 
