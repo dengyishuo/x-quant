@@ -21,14 +21,7 @@ output:
     preserve_yaml: true
 ---
 
-```{R setup, include = FALSE}
-knitr::opts_chunk$set(echo = TRUE, 
-                      warning = FALSE, 
-                      message = FALSE, 
-                      fig.pos = 'H', 
-                      fig.align = 'center'
-                      )
-```
+
 
 # 摘要
 
@@ -124,7 +117,8 @@ $$
 
 首先加载所需的R包并获取股票数据：
 
-```{R pkgs, message=FALSE}
+
+``` r
 # 加载必要的R包
 library(quantmod)      # 获取金融数据
 library(tseries)       # 时间序列分析
@@ -137,7 +131,8 @@ library(knitr)         # 表格输出
 
 设置时间范围并获取股票数据：
 
-```{R data_setup}
+
+``` r
 # 设置时间范围
 start_date <- "2018-01-01"
 end_date <- "2023-01-01"
@@ -159,12 +154,50 @@ colnames(close_prices) <- tickers
 
 # 查看数据基本信息
 str(close_prices)
+```
+
+```
+## An xts object on 2018-01-02 / 2022-12-30 containing: 
+##   Data:    double [1259, 8]
+##   Columns: AAPL, MSFT, AMZN, GOOGL, META ... with 3 more columns
+##   Index:   Date [1259] (TZ: "UTC")
+##   xts Attributes:
+##     $ src    : chr "yahoo"
+##     $ updated: POSIXct[1:1], format: "2025-07-02 17:54:52"
+```
+
+``` r
 summary(close_prices)
+```
+
+```
+##      Index                 AAPL             MSFT             AMZN       
+##  Min.   :2018-01-02   Min.   : 35.55   Min.   : 85.01   Min.   : 59.45  
+##  1st Qu.:2019-04-03   1st Qu.: 51.02   1st Qu.:119.60   1st Qu.: 88.93  
+##  Median :2020-07-02   Median : 91.63   Median :201.91   Median :107.78  
+##  Mean   :2020-07-02   Mean   : 98.09   Mean   :193.87   Mean   :119.81  
+##  3rd Qu.:2021-09-30   3rd Qu.:142.86   3rd Qu.:255.25   3rd Qu.:158.09  
+##  Max.   :2022-12-30   Max.   :182.01   Max.   :343.11   Max.   :186.57  
+##      GOOGL             META             NFLX            TSLA       
+##  Min.   : 49.23   Min.   : 88.91   Min.   :166.4   Min.   : 11.93  
+##  1st Qu.: 58.74   1st Qu.:170.53   1st Qu.:298.6   1st Qu.: 21.08  
+##  Median : 73.96   Median :194.47   Median :361.8   Median : 80.58  
+##  Mean   : 85.71   Mean   :217.89   Mean   :387.8   Mean   :131.78  
+##  3rd Qu.:112.67   3rd Qu.:266.87   3rd Qu.:494.5   3rd Qu.:236.12  
+##  Max.   :149.84   Max.   :382.18   Max.   :691.7   Max.   :409.97  
+##       NVDA       
+##  Min.   : 3.177  
+##  1st Qu.: 5.606  
+##  Median : 9.612  
+##  Mean   :11.629  
+##  3rd Qu.:16.146  
+##  Max.   :33.376
 ```
 
 绘制价格走势图：
 
-```{R plot_prices}
+
+``` r
 # 绘制价格走势图
 price_df <- data.frame(
   date = index(close_prices),
@@ -182,11 +215,14 @@ ggplot(price_long, aes(x = date, y = value, color = variable)) +
   theme_minimal()
 ```
 
+<img src="/docs/pairs-trading_files/figure-html/plot_prices-1.png" width="672" style="display: block; margin: auto;" />
+
 ## 单位根检验
 
 对每只股票的价格序列进行单位根检验，确认其非平稳性：
 
-```{R adf_test}
+
+``` r
 # 创建一个函数进行ADF检验
 perform_adf_test <- function(series) {
   adf_result <- adf.test(series)
@@ -207,7 +243,24 @@ knitr::kable(adf_results_df,
              caption = "股票价格序列的ADF单位根检验结果", 
              digits = 4,
              booktabs = TRUE)
+```
 
+
+
+Table: (\#tab:adf_test)股票价格序列的ADF单位根检验结果
+
+|      | Statistic| P_Value|Stationary |
+|:-----|---------:|-------:|:----------|
+|AAPL  |   -1.5667|  0.7617|否         |
+|MSFT  |   -1.1554|  0.9137|否         |
+|AMZN  |   -0.4665|  0.9833|否         |
+|GOOGL |   -0.6337|  0.9757|否         |
+|META  |   -0.4532|  0.9839|否         |
+|NFLX  |   -1.5389|  0.7735|否         |
+|TSLA  |   -1.2537|  0.8942|否         |
+|NVDA  |   -1.7233|  0.6954|否         |
+
+``` r
 # 对价格取对数并差分，创建收益率序列
 returns <- diff(log(close_prices))[-1]
 
@@ -223,11 +276,27 @@ knitr::kable(returns_adf_results_df,
              booktabs = TRUE)
 ```
 
+
+
+Table: (\#tab:adf_test)股票收益率序列的ADF单位根检验结果
+
+|      | Statistic| P_Value|Stationary |
+|:-----|---------:|-------:|:----------|
+|AAPL  |  -10.2580|    0.01|是         |
+|MSFT  |  -11.6003|    0.01|是         |
+|AMZN  |  -11.4524|    0.01|是         |
+|GOOGL |  -11.2531|    0.01|是         |
+|META  |  -11.6074|    0.01|是         |
+|NFLX  |  -10.9801|    0.01|是         |
+|TSLA  |   -9.9687|    0.01|是         |
+|NVDA  |  -10.4041|    0.01|是         |
+
 ## 寻找潜在的协整对
 
 计算股票之间的相关性，并寻找可能存在协整关系的股票对：
 
-```{R correlation_analysis}
+
+``` r
 # 计算价格序列的相关性矩阵
 correlation_matrix <- cor(close_prices, use = "complete.obs")
 
@@ -236,13 +305,34 @@ knitr::kable(correlation_matrix,
              caption = "股票价格序列相关性矩阵", 
              digits = 4,
              booktabs = TRUE)
+```
 
+
+
+Table: (\#tab:correlation_analysis)股票价格序列相关性矩阵
+
+|      |   AAPL|   MSFT|   AMZN|  GOOGL|   META|   NFLX|   TSLA|   NVDA|
+|:-----|------:|------:|------:|------:|------:|------:|------:|------:|
+|AAPL  | 1.0000| 0.9722| 0.8029| 0.9316| 0.5147| 0.3635| 0.9618| 0.9228|
+|MSFT  | 0.9722| 1.0000| 0.8451| 0.9611| 0.6168| 0.4685| 0.9439| 0.9411|
+|AMZN  | 0.8029| 0.8451| 1.0000| 0.8044| 0.8391| 0.7683| 0.7974| 0.7960|
+|GOOGL | 0.9316| 0.9611| 0.8044| 1.0000| 0.6528| 0.4616| 0.9418| 0.9594|
+|META  | 0.5147| 0.6168| 0.8391| 0.6528| 1.0000| 0.8551| 0.5404| 0.6216|
+|NFLX  | 0.3635| 0.4685| 0.7683| 0.4616| 0.8551| 1.0000| 0.4042| 0.4922|
+|TSLA  | 0.9618| 0.9439| 0.7974| 0.9418| 0.5404| 0.4042| 1.0000| 0.9357|
+|NVDA  | 0.9228| 0.9411| 0.7960| 0.9594| 0.6216| 0.4922| 0.9357| 1.0000|
+
+``` r
 # 绘制相关性热图
 library(corrplot)
 corrplot(correlation_matrix, method = "color", type = "upper", 
          tl.col = "black", tl.srt = 45,
          title = "股票价格相关性热图", mar = c(0, 0, 2, 0))
+```
 
+<img src="/docs/pairs-trading_files/figure-html/correlation_analysis-1.png" width="672" style="display: block; margin: auto;" />
+
+``` r
 # 寻找相关性较高的股票对
 high_corr_pairs <- which(correlation_matrix > 0.8 & correlation_matrix < 1, arr.ind = TRUE)
 high_corr_pairs <- high_corr_pairs[high_corr_pairs[,1] < high_corr_pairs[,2], ]
@@ -260,11 +350,34 @@ knitr::kable(high_corr_pairs_df,
              booktabs = TRUE)
 ```
 
+
+
+Table: (\#tab:correlation_analysis)相关性较高的股票对
+
+|Stock1 |Stock2 | Correlation|
+|:------|:------|-----------:|
+|AAPL   |MSFT   |      0.9722|
+|AAPL   |AMZN   |      0.8029|
+|MSFT   |AMZN   |      0.8451|
+|AAPL   |GOOGL  |      0.9316|
+|MSFT   |GOOGL  |      0.9611|
+|AMZN   |GOOGL  |      0.8044|
+|AMZN   |META   |      0.8391|
+|META   |NFLX   |      0.8551|
+|AAPL   |TSLA   |      0.9618|
+|MSFT   |TSLA   |      0.9439|
+|GOOGL  |TSLA   |      0.9418|
+|AAPL   |NVDA   |      0.9228|
+|MSFT   |NVDA   |      0.9411|
+|GOOGL  |NVDA   |      0.9594|
+|TSLA   |NVDA   |      0.9357|
+
 ## 协整检验
 
 对相关性较高的股票对进行协整检验：
 
-```{R cointegration_test}
+
+``` r
 # 创建一个函数进行Engle-Granger协整检验
 perform_eg_test <- function(series1, series2) {
   # 第一步：进行线性回归
@@ -320,7 +433,31 @@ knitr::kable(cointegration_summary,
              caption = "股票对的协整检验结果", 
              digits = 4,
              booktabs = TRUE)
+```
 
+
+
+Table: (\#tab:cointegration_test)股票对的协整检验结果
+
+|           |Pair       | P_Value|Is_Cointegrated |    Beta|    Alpha|
+|:----------|:----------|-------:|:---------------|-------:|--------:|
+|AAPL-MSFT  |AAPL-MSFT  |  0.3291|FALSE           |  0.6034| -18.8900|
+|AAPL-AMZN  |AAPL-AMZN  |  0.7377|FALSE           |  1.0447| -27.0757|
+|MSFT-AMZN  |MSFT-AMZN  |  0.8092|FALSE           |  1.7716| -18.3808|
+|AAPL-GOOGL |AAPL-GOOGL |  0.5481|FALSE           |  1.4035| -22.2048|
+|MSFT-GOOGL |MSFT-GOOGL |  0.6072|FALSE           |  2.3331|  -6.0949|
+|AMZN-GOOGL |AMZN-GOOGL |  0.7852|FALSE           |  0.9315|  39.9734|
+|AMZN-META  |AMZN-META  |  0.0442|TRUE            |  0.4463|  22.5573|
+|META-NFLX  |META-NFLX  |  0.2425|FALSE           |  0.4793|  32.0470|
+|AAPL-TSLA  |AAPL-TSLA  |  0.0717|FALSE           |  0.3780|  48.2774|
+|MSFT-TSLA  |MSFT-TSLA  |  0.2255|FALSE           |  0.5977| 115.1065|
+|GOOGL-TSLA |GOOGL-TSLA |  0.0940|FALSE           |  0.2457|  53.3358|
+|AAPL-NVDA  |AAPL-NVDA  |  0.2053|FALSE           |  5.8621|  29.9229|
+|MSFT-NVDA  |MSFT-NVDA  |  0.3136|FALSE           |  9.6320|  81.8640|
+|GOOGL-NVDA |GOOGL-NVDA |  0.0757|FALSE           |  4.0452|  38.6694|
+|TSLA-NVDA  |TSLA-NVDA  |  0.0916|FALSE           | 15.1244| -44.0953|
+
+``` r
 # 找出存在协整关系的股票对
 cointegrated_pairs <- cointegration_summary[cointegration_summary$Is_Cointegrated, ]
 
@@ -335,11 +472,20 @@ if(nrow(cointegrated_pairs) > 0) {
 }
 ```
 
+
+
+Table: (\#tab:cointegration_test)存在协整关系的股票对
+
+|          |Pair      | P_Value|Is_Cointegrated |   Beta|   Alpha|
+|:---------|:---------|-------:|:---------------|------:|-------:|
+|AMZN-META |AMZN-META |  0.0442|TRUE            | 0.4463| 22.5573|
+
 ## 可视化协整关系
 
 选择一个存在协整关系的股票对，可视化其价格走势和协整残差：
 
-```{R visualize_cointegration}
+
+``` r
 # 如果存在协整对，选择第一个进行可视化
 if(nrow(cointegrated_pairs) > 0) {
   selected_pair <- cointegrated_pairs$Pair[1]
@@ -419,14 +565,16 @@ if(nrow(cointegrated_pairs) > 0) {
          y = "密度") +
     theme_minimal()
 }
-    
 ```
+
+<img src="/docs/pairs-trading_files/figure-html/visualize_cointegration-1.png" width="672" style="display: block; margin: auto;" />
 
 ## 构建配对交易策略
 
 基于协整残差构建配对交易策略：
 
-```{R pairs_trading_strategy}
+
+``` r
 # 如果存在协整对，构建配对交易策略
 if(nrow(cointegrated_pairs) > 0) {
   selected_pair <- cointegrated_pairs$Pair[1]
@@ -546,11 +694,14 @@ if(nrow(cointegrated_pairs) > 0) {
 }
 ```
 
+<img src="/docs/pairs-trading_files/figure-html/pairs_trading_strategy-1.png" width="672" style="display: block; margin: auto;" />
+
 ## 策略绩效评估
 
 评估配对交易策略的绩效：
 
-```{R performance_evaluation}
+
+``` r
 # 如果存在协整对，评估策略绩效
 if(nrow(cointegrated_pairs) > 0) {
   # 计算策略绩效指标
@@ -610,11 +761,35 @@ if(nrow(cointegrated_pairs) > 0) {
 }
 ```
 
+
+
+Table: (\#tab:performance_evaluation)配对交易策略详细绩效指标
+
+|                |  Strategy|
+|:---------------|---------:|
+|Observations    | 1257.0000|
+|NAs             |    1.0000|
+|Minimum         |   -0.1031|
+|Quartile 1      |    0.0000|
+|Median          |    0.0000|
+|Arithmetic Mean |    0.0005|
+|Geometric Mean  |    0.0005|
+|Quartile 3      |    0.0000|
+|Maximum         |    0.0762|
+|SE Mean         |    0.0003|
+|LCL Mean (0.95) |    0.0000|
+|UCL Mean (0.95) |    0.0011|
+|Variance        |    0.0001|
+|Stdev           |    0.0098|
+|Skewness        |   -0.8836|
+|Kurtosis        |   27.9065|
+
 ## 样本外回测
 
 使用样本外数据验证策略的有效性：
 
-```{R out_of_sample_backtest}
+
+``` r
 # 设置样本外时间范围
 oos_start_date <- "2023-01-02"
 oos_end_date <- "2024-12-31"
@@ -728,13 +903,25 @@ if(nrow(cointegrated_pairs) > 0) {
 }
 ```
 
+
+
+Table: (\#tab:out_of_sample_backtest)配对交易策略样本内外绩效对比
+
+|Metric     | InSample| OutOfSample|
+|:----------|--------:|-----------:|
+|年化收益率 |   0.1278|      0.0802|
+|年化波动率 |   0.1561|      0.1595|
+|夏普比率   |   0.8191|      0.5029|
+|最大回撤   |   0.1881|      0.1974|
+
 # 敏感性分析
 
 ## 阈值参数敏感性分析
 
 分析不同的交易阈值对策略绩效的影响：
 
-```{R sensitivity_analysis}
+
+``` r
 # 如果存在协整对，进行阈值敏感性分析
 if(nrow(cointegrated_pairs) > 0) {
   selected_pair <- cointegrated_pairs$Pair[1]
@@ -854,6 +1041,14 @@ if(nrow(cointegrated_pairs) > 0) {
                booktabs = TRUE)
 }
 ```
+
+
+
+Table: (\#tab:sensitivity_analysis)配对交易策略最优阈值组合
+
+| Entry_Threshold| Exit_Threshold| Annual_Return| Annual_Volatility| Sharpe_Ratio| Max_Drawdown| Num_Trades|
+|---------------:|--------------:|-------------:|-----------------:|------------:|------------:|----------:|
+|             1.5|            0.4|        0.2407|            0.1684|       1.4297|       0.1524|          7|
 
 # 结论与讨论
 

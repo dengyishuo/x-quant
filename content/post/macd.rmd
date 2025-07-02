@@ -107,7 +107,7 @@ $$
    $$
    DEA = \frac{2}{N_{signal} + 1} \times (DIF - DEA^{pre}) + DEA^{pre}
    $$
-   其中， $N_{signal}$ 通常为9。
+   其中，$N_{signal}$ 通常为9。
 
 4. 计算MACD柱状图：
    $$
