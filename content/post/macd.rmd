@@ -7,6 +7,7 @@ lead: null
 authorbox: false
 sidebar: false
 pager: false
+mathjax: true
 tags:
   - "动量"
   - "轮动策略"
@@ -14,9 +15,8 @@ tags:
   - "R"
 categories:
   - "量化投资"
-mathjax: true
 output:
-  html_document:
+  md_document:
     preserve_yaml: true
 ---
 

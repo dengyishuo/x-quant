@@ -7,6 +7,7 @@ lead: null
 authorbox: false
 sidebar: false
 pager: false
+mathjax: true
 tags: 
     - "R"
     - "金融"
@@ -15,13 +16,10 @@ tags:
 categories: 
     - "R语言"
     - "金融数据分析"
-mathjax: true
 output:
-  html_document:
+  md_document:
     preserve_yaml: true
 ---
-
-\newpage
 
 ```{R, include = FALSE}
 knitr::opts_chunk$set(echo = TRUE, 

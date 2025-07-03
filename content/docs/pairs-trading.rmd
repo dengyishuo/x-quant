@@ -7,6 +7,7 @@ description: null
 authorbox: false
 sidebar: false
 pager: false
+mathjax: true
 tags: 
   - "R"
   -  "金融"
@@ -15,9 +16,8 @@ tags:
 categories:
   - "R语言"
   - "金融数据分析"
-mathjax: true
 output:
-  html_document:
+  md_document:
     preserve_yaml: true
 ---
 
@@ -116,7 +116,7 @@ $$
 \Delta x_{t} = \alpha_{2} + \sum_{i=1}^{p} \beta_{2i} \Delta x_{t-i} + \sum_{i=0}^{q} \gamma_{2i} \Delta y_{t-i} + \lambda_2 (y_{t-1} - \beta x_{t-1}) + \varepsilon_{2t}
 $$
 
-其中，$\(y_{t-1} - \beta x_{t-1}\)$ 是误差修正项，表示对长期均衡关系的偏离。
+其中，$(y_{t-1} - \beta x_{t-1})$ 是误差修正项，表示对长期均衡关系的偏离。
 
 # 实证分析
 
