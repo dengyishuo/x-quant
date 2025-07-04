@@ -49,3 +49,9 @@ googleAnalytics = "" # Enable Google Analytics by entering your tracking id
   [markup.goldmark]
     [markup.goldmark.renderer]
       unsafe = true  # 允许原始 HTML 和 LaTeX 符号
+      
+# 添加主页菜单配置
+[[menu.main]]
+  name = "主页"  # 菜单显示名称（可改为"主页"）
+  url = "/"      # 链接到网站根目录
+  weight = 1     # 权重，控制排序位置（值越小越靠前）
