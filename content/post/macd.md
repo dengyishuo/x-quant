@@ -7,6 +7,7 @@ lead: null
 authorbox: false
 sidebar: false
 pager: false
+mathjax: true
 tags:
   - "动量"
   - "轮动策略"
@@ -14,9 +15,8 @@ tags:
   - "R"
 categories:
   - "量化投资"
-mathjax: true
 output:
-  html_document:
+  md_document:
     preserve_yaml: true
 ---
 
@@ -105,7 +105,7 @@ summary(TSLA)
 ##  Min.   : 11.93   Min.   : 29401800   Min.   : 11.93  
 ##  1st Qu.: 21.50   1st Qu.: 77479900   1st Qu.: 21.50  
 ##  Median :125.58   Median :105881850   Median :125.58  
-##  Mean   :135.07   Mean   :134180816   Mean   :135.07  
+##  Mean   :135.07   Mean   :134181265   Mean   :135.07  
 ##  3rd Qu.:231.07   3rd Qu.:159549600   3rd Qu.:231.07  
 ##  Max.   :409.97   Max.   :914082000   Max.   :409.97
 ```
@@ -4135,7 +4135,7 @@ print(combined_plot)
 ##   z     cells    name                grob
 ## 1 1 (2-2,1-1) arrange      gtable[layout]
 ## 2 2 (3-3,1-1) arrange      gtable[layout]
-## 3 3 (1-1,1-1) arrange text[GRID.text.499]
+## 3 3 (1-1,1-1) arrange text[GRID.text.513]
 ```
 
 # 交易频率分析

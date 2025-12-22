@@ -1,12 +1,13 @@
 ---
 title: "R软件与多股票波动性及相关性的可视化"
-author: "Ski/格物堂"
+author: "Ski"
 date: "2025-06-10 15:36:25"
 description: null
 lead: null
 authorbox: false
 sidebar: false
 pager: false
+mathjax: true
 tags:
   - "动量"
   - "轮动策略"
@@ -14,9 +15,8 @@ tags:
   - "R"
 categories:
   - "量化投资"
-mathjax: true
 output:
-  html_document:
+  md_document:
     preserve_yaml: true
 ---
 
@@ -278,10 +278,10 @@ print(volatility)
 ## # A tibble: 4 × 2
 ##   symbol volatility
 ##   <chr>       <dbl>
-## 1 NVDA       0.0330
-## 2 GOOGL      0.0193
-## 3 AAPL       0.0165
-## 4 MSFT       0.0152
+## 1 NVDA       0.0314
+## 2 GOOGL      0.0191
+## 3 AAPL       0.0161
+## 4 MSFT       0.0146
 ```
 
 ## 相关性分析

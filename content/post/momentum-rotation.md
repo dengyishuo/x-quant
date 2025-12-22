@@ -7,15 +7,15 @@ lead: null
 authorbox: false
 sidebar: false
 pager: false
+mathjax: true
 tags:
   - "R"
   - "动量"
   - "轮动策略"
 categories:
   - "量化投资"
-mathjax: true
 output:
-  html_document:
+  md_document:
     preserve_yaml: true
 ---
 
@@ -99,12 +99,17 @@ for (symbol in all_symbols) {
 
 ```
 ## Successfully downloaded AAPL 
-## Successfully downloaded MSFT 
+## Error downloading MSFT : Unable to import "MSFT".
+## Transferred a partial file [query2.finance.yahoo.com] 
 ## Successfully downloaded AMZN 
 ## Successfully downloaded TSLA 
 ## Successfully downloaded ARQT 
-## Successfully downloaded AVXL 
-## Successfully downloaded BPMC 
+## Successfully downloaded AVXL
+```
+
+```
+## Error downloading BPMC : Unable to import "BPMC".
+## cannot open the connection 
 ## Successfully downloaded CELZ
 ```
 
@@ -141,12 +146,10 @@ for (symbol in valid_symbols) {
 
 ```
 ## Successfully downloaded OOS data for AAPL 
-## Successfully downloaded OOS data for MSFT 
 ## Successfully downloaded OOS data for AMZN 
 ## Successfully downloaded OOS data for TSLA 
 ## Successfully downloaded OOS data for ARQT 
 ## Successfully downloaded OOS data for AVXL 
-## Successfully downloaded OOS data for BPMC 
 ## Successfully downloaded OOS data for CELZ
 ```
 
@@ -448,10 +451,10 @@ print(performance_metrics)
 
 ```
 ##                              Strategy Total_Return Sharpe_Ratio Max_Drawdown
-## X2022.12.30      Large Cap Buy & Hold    1.8775824    0.4884327    0.5331828
-## X2022.12.30.1    Small Cap Buy & Hold   -0.8534490   -0.6581043    0.9683605
-## X2022.12.30.2 Equal Weight Buy & Hold    0.5120667   -0.3795699    0.7173901
-## X2022.12.30.3       Momentum Rotation    7.8035737    0.3099696    0.6298531
+## X2022.12.30      Large Cap Buy & Hold    1.9073044    0.4189929    0.5876718
+## X2022.12.30.1    Small Cap Buy & Hold   -0.9055558   -0.6402837    0.9908844
+## X2022.12.30.2 Equal Weight Buy & Hold    0.5008743   -0.4441019    0.8079713
+## X2022.12.30.3       Momentum Rotation   70.1185521    0.6297609    0.6358316
 ```
 
 # 参数优化
@@ -523,7 +526,7 @@ print(paste(
 ```
 
 ```
-## [1] "最优参数组合: 回看期= 60  持有期= 5  阈值= 0.01  夏普比率= 1.347"
+## [1] "最优参数组合: 回看期= 30  持有期= 5  阈值= 0.01  夏普比率= 1.368"
 ```
 
 ``` r
@@ -755,10 +758,10 @@ print(oos_performance) # 输出策略比较结果
 
 ```
 ##                              Strategy Total_Return Sharpe_Ratio Max_Drawdown
-## X2023.12.29      Large Cap Buy & Hold    0.7708001    2.9047901    0.1693780
-## X2023.12.29.1    Small Cap Buy & Hold   -0.1367801   -0.4796014    0.6159451
-## X2023.12.29.2 Equal Weight Buy & Hold    0.3170100    0.6359367    0.3230760
-## X2023.12.29.3       Momentum Rotation    0.4791532    0.7933869    0.2934326
+## X2023.12.29      Large Cap Buy & Hold    0.8434508   2.80326400    0.1977551
+## X2023.12.29.1    Small Cap Buy & Hold   -0.3612198  -0.78700173    0.7411508
+## X2023.12.29.2 Equal Weight Buy & Hold    0.2411155   0.06721664    0.4347036
+## X2023.12.29.3       Momentum Rotation    0.9347272   1.21253810    0.4108214
 ```
 
 # 结论

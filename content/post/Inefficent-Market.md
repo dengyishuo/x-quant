@@ -7,14 +7,14 @@ lead: null
 authorbox: false
 sidebar: false
 pager: false
+mathjax: true
 tags:
   - "有效市场"
   - "并非有效的市场"
 categories:
   - "投资书籍"
-mathjax: true
 output:
-  html_document:
+  md_document:
     preserve_yaml: true
 ---
 
